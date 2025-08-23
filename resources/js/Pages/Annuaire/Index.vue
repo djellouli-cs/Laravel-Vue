@@ -26,9 +26,9 @@
           v-for="(num, index) in filteredSuggestions"
           :key="num.id ?? index"
           @click="selectSuggestion(String(num.NDappel ?? ''))"
-          :class="[
-            'px-5 py-3 cursor-pointer transition',
-            activeIndex === index ? 'bg-blue-100 font-semibold text-blue-800' : 'hover:bg-blue-50'
+          :class="[ 
+            'px-5 py-3 cursor-pointer transition', 
+            activeIndex === index ? 'bg-blue-100 font-semibold text-blue-800' : 'hover:bg-blue-50' 
           ]"
         >
           {{ num.NDappel }}
@@ -39,7 +39,8 @@
       <template v-if="searchedNumero">
         <transition name="fade">
           <div class="bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-2xl p-8 shadow-lg animate-fade-in">
-            <!-- ✏️ Bouton Éditer -->
+            
+            <!-- Bouton éditer -->
             <div class="flex justify-end mb-4">
               <button
                 @click="editNumero(searchedNumero)"
@@ -53,6 +54,7 @@
               NDappel : <span class="text-blue-900">{{ searchedNumero.NDappel }}</span>
             </h2>
 
+            <!-- Détails principaux -->
             <div class="grid grid-cols-2 gap-6 text-base">
               <div><span class="font-semibold text-blue-700">ID :</span> {{ searchedNumero.id }}</div>
               <div><span class="font-semibold text-blue-700">Position :</span> {{ searchedNumero.Position }}</div>
@@ -75,6 +77,7 @@
                 <span v-else>—</span>
               </div>
 
+              <!-- Groupes -->
               <div class="col-span-2">
                 <span class="font-semibold text-blue-700">Groupes :</span>
                 <div v-if="searchedNumero.destination?.groupes?.length" class="flex flex-wrap gap-2 mt-2">
@@ -92,11 +95,12 @@
               <div><span class="font-semibold text-blue-700">Classe :</span> {{ searchedNumero.classe?.classe || '—' }}</div>
               <div><span class="font-semibold text-blue-700">Type :</span> {{ searchedNumero.type?.name || '—' }}</div>
 
+              <!-- Réserve -->
               <div class="col-span-2">
                 <span class="font-semibold text-blue-700">Réserve :</span>
                 <span v-if="searchedNumero.reserve">
                   {{ searchedNumero.reserve.reserve ?? '—' }}
-                  <span
+                  <span 
                     class="ml-2"
                     :class="searchedNumero.reserve?.is_reserved ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'"
                   >
@@ -108,11 +112,12 @@
 
               <div><span class="font-semibold text-blue-700">Technologie :</span> {{ searchedNumero.technologie?.name || '—' }}</div>
 
+              <!-- Facture -->
               <div class="col-span-2">
                 <span class="font-semibold text-blue-700">Facture :</span>
                 <span v-if="searchedNumero.facture">
                   {{ searchedNumero.facture.facture ?? '—' }}
-                  <span
+                  <span 
                     class="ml-2"
                     :class="searchedNumero.facture?.is_factured ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'"
                   >
@@ -122,6 +127,7 @@
                 <span v-else>—</span>
               </div>
 
+              <!-- Poste -->
               <div class="col-span-2">
                 <span class="font-semibold text-blue-700">Poste :</span>
                 <span v-if="searchedNumero.post">
@@ -130,11 +136,12 @@
                 <span v-else>—</span>
               </div>
 
+              <!-- Fax -->
               <div class="col-span-2">
                 <span class="font-semibold text-blue-700">Fax :</span>
                 <span v-if="searchedNumero.fax">
                   {{ searchedNumero.fax.description ?? '—' }}
-                  <span
+                  <span 
                     class="ml-2"
                     :class="searchedNumero.fax?.NDappel ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'"
                   >
@@ -155,6 +162,7 @@
               </div>
             </div>
 
+            <!-- Acheminements -->
             <div class="mt-8">
               <h3 class="font-semibold text-lg mb-3 text-blue-800 flex items-center gap-2">📦 Acheminements</h3>
               <ul v-if="searchedNumero.acheminements?.length" class="list-disc ml-7 text-base text-blue-900">
@@ -165,14 +173,13 @@
               <p v-else class="text-gray-400 text-base">Aucun acheminement disponible.</p>
             </div>
 
+            <!-- Notes -->
             <div class="mt-8">
               <h3 class="font-semibold text-lg mb-3 text-blue-800 flex items-center gap-2">📝 Notes</h3>
               <ul v-if="searchedNumero.notes?.length" class="list-disc ml-7 text-base text-blue-900">
                 <li v-for="note in searchedNumero.notes" :key="note.id ?? note.created_at">
                   {{ note.content }}
-                  <span class="text-gray-400 text-xs">
-                    ({{ formatDate(note.created_at, true) }})
-                  </span>
+                  <span class="text-gray-400 text-xs"> ({{ formatDate(note.created_at, true) }}) </span>
                 </li>
               </ul>
               <p v-else class="text-gray-400 text-base">Aucune note disponible pour ce numéro.</p>
@@ -208,32 +215,30 @@ let debounceTimer = null
 
 const normalize = (v) => String(v ?? '').trim().toLowerCase()
 
-// Debounce input and open suggestions while typing
+// Debounce input
 watch(search, (val) => {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
     debouncedSearch.value = val
   }, 300)
-
   activeIndex.value = -1
   showSuggestions.value = Boolean(val && String(val).trim() !== '')
 })
 
-// Exact match (search executed)
+// Match exact NDappel
 const searchedNumero = computed(() => {
   const q = normalize(debouncedSearch.value)
   if (!q) return null
-  return props.numeros.find(n => normalize(n.NDappel) === q) || null
+  return props.numeros.find((n) => normalize(n.NDappel) === q) || null
 })
 
-// Suggestions (live while typing)
+// Suggestions
 const filteredSuggestions = computed(() => {
   const q = normalize(search.value)
   if (!q) return []
-  return props.numeros.filter(n => normalize(n.NDappel).includes(q))
+  return props.numeros.filter((n) => normalize(n.NDappel).includes(q))
 })
 
-// Whether to show the suggestion list
 const showSuggestionList = computed(() => {
   return showSuggestions.value && filteredSuggestions.value.length > 0 && !searchedNumero.value
 })
@@ -245,10 +250,8 @@ function selectSuggestion(ndappel) {
   showSuggestions.value = false
 }
 
-// Keyboard nav and enter behavior
 function handleKeydown(event) {
   const max = filteredSuggestions.value.length - 1
-
   if (event.key === 'ArrowDown') {
     event.preventDefault()
     activeIndex.value = activeIndex.value < max ? activeIndex.value + 1 : 0
@@ -279,7 +282,6 @@ watch(searchedNumero, (val) => {
   }
 })
 
-// Close suggestions when clicking outside
 function onClickOutside(e) {
   if (!containerRef.value) return
   if (!containerRef.value.contains(e.target)) {
@@ -290,13 +292,20 @@ function onClickOutside(e) {
 
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
+  // Pré-remplir depuis ?ndappel=xxxx
+  const urlParams = new URLSearchParams(window.location.search)
+  const ndappel = urlParams.get('ndappel')
+  if (ndappel) {
+    search.value = ndappel
+    debouncedSearch.value = ndappel
+  }
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', onClickOutside)
 })
 
-// Format date safely
+// Format date
 function formatDate(dateIso, withTime = false) {
   if (!dateIso) return '—'
   try {
@@ -308,7 +317,7 @@ function formatDate(dateIso, withTime = false) {
   }
 }
 
-// Redirection via Inertia
+// Redirection vers édition
 function editNumero(numero) {
   if (numero?.id) {
     router.visit(`/numeros/${numero.id}/edit`)
@@ -317,8 +326,5 @@ function editNumero(numero) {
 </script>
 
 <style scoped>
-/* small helper (kept from your previous styles) */
-.bg-blue-100 {
-  background-color: #ebf8ff;
-}
+.bg-blue-100 { background-color: #ebf8ff; }
 </style>

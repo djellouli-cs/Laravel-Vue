@@ -2,74 +2,118 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\IpAddress;
-use App\Models\Plage;
-use Illuminate\Http\Request;
+use App\Models\Numero;
+use App\Models\Organisme;
+use App\Models\Destination;
+use App\Models\Service;
+use App\Models\Technologie;
+use App\Models\Groupe;
 use Inertia\Inertia;
-   use App\Models\Numero;
+use Illuminate\Http\Request;
 
-   
 class AnnuaireController extends Controller
 {
+    /**
+     * Show a numero by its NDappel query param.
+     */
+    public function show(Request $request)
+    {
+        // Retrieve ?ndappel=xxxx from the URL
+        $ndappel = $request->query('ndappel');
 
-public function index()
-{
-    $numeros = Numero::with([
-        'organisme', 
-        'destination.groupes', 
-        'service',
-        'classe', 
-        'type', 
-        'reserve', 
-        'technologie',
-        'facture', 
-        'matricule', 
-        'acheminements',
-        'notes', 
-        'fax', 
-        'post'
+        // Find the numero by NDappel column
+        $numero = Numero::where('NDappel', $ndappel)
+            ->with([
+                'organisme',
+                'destination.groupes',
+                'service',
+                'classe',
+                'type',
+                'reserve',
+                'technologie',
+                'facture',
+                'matricule',
+                'acheminements',
+                'notes',
+                'fax',
+                'post',
+            ])
+            ->firstOrFail(); // throw 404 if not found
 
-    ])->get();
+        return Inertia::render('Annuaire/Show', [
+            'numero' => $numero,
+        ]);
+    }
 
-    return inertia('Annuaire/Index', [
-        'numeros' => $numeros,
-    ]);
-}
+    /**
+     * List all numeros.
+     */
+    public function index()
+    {
+        $numeros = Numero::with([
+            'organisme',
+            'destination.groupes',
+            'service',
+            'classe',
+            'type',
+            'reserve',
+            'technologie',
+            'facture',
+            'matricule',
+            'acheminements',
+            'notes',
+            'fax',
+            'post',
+        ])->get();
 
-public function filter()
-{
-    $numeros = \App\Models\Numero::with(['organisme', 'destination.groupes', 'service', 'technologie', 'matricule'])->get();
-    $organismes = \App\Models\Organisme::all();
-    $destinations = \App\Models\Destination::all();
-    $services = \App\Models\Service::all();
-    $technologies = \App\Models\Technologie::all();
-    $groupes = \App\Models\Groupe::all();
-    return inertia('Annuaire/Filter', [
-        'numeros' => $numeros,
-        'organismes' => $organismes,
-        'destinations' => $destinations,
-        'services' => $services,
-        'technologies' => $technologies,
-        'groupes' => $groupes,
-    ]);
-}
+        return Inertia::render('Annuaire/Index', [
+            'numeros' => $numeros,
+        ]);
+    }
 
-public function recherche()
-{
-    $numeros = \App\Models\Numero::with(['organisme', 'destination.groupes', 'service', 'technologie', 'matricule'])->get();
-    $organismes = \App\Models\Organisme::all();
-    $destinations = \App\Models\Destination::all();
-    $services = \App\Models\Service::all();
-    $technologies = \App\Models\Technologie::all();
-    $groupes = \App\Models\Groupe::all();
-    return inertia('Annuaire/Recherche', [
-        'numeros' => $numeros,
-        'organismes' => $organismes,
-        'destinations' => $destinations,
-        'services' => $services,
-        'technologies' => $technologies,
-        'groupes' => $groupes,
-    ]);
-}
+    /**
+     * Filter page.
+     */
+    public function filter()
+    {
+        $numeros = Numero::with([
+            'organisme',
+            'destination.groupes',
+            'service',
+            'technologie',
+            'matricule',
+        ])->get();
 
+        return Inertia::render('Annuaire/Filter', [
+            'numeros'      => $numeros,
+            'organismes'   => Organisme::all(),
+            'destinations' => Destination::all(),
+            'services'     => Service::all(),
+            'technologies' => Technologie::all(),
+            'groupes'      => Groupe::all(),
+        ]);
+    }
+
+    /**
+     * Recherche page.
+     */
+    public function recherche()
+    {
+        $numeros = Numero::with([
+            'organisme',
+            'destination.groupes',
+            'service',
+            'technologie',
+            'matricule',
+        ])->get();
+
+        return Inertia::render('Annuaire/Recherche', [
+            'numeros'      => $numeros,
+            'organismes'   => Organisme::all(),
+            'destinations' => Destination::all(),
+            'services'     => Service::all(),
+            'technologies' => Technologie::all(),
+            'groupes'      => Groupe::all(),
+        ]);
+    }
 }

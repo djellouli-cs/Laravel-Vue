@@ -97,16 +97,11 @@ Route::get('/groupes', [GroupeController::class, 'index'])->name('groupes.index'
 Route::post('/manageGroupe', [GroupeController::class, 'store']);
 Route::put('/manageGroupe/{id}', [GroupeController::class, 'update']);
 Route::delete('/manageGroupe/{id}', [GroupeController::class, 'destroy']);
-
+//  Annuaire show (one numéro)
+Route::get('/annuaire/show', [AnnuaireController::class, 'show'])->name('annuaire.show');
 Route::get('/Annuaire', [AnnuaireController::class, 'index'])->name('Annuaire.index');
 Route::get('/annuaire/filter', [App\Http\Controllers\AnnuaireController::class, 'filter'])->name('Annuaire.filter');
 Route::get('/annuaire/recherche', [App\Http\Controllers\AnnuaireController::class, 'recherche'])->name('Annuaire.recherche');
-/*Route::get('/numero', function () {
-    return Inertia::render('Numero/Search');
-})->name('numero.form');
-
-Route::get('/numero/search', [NumeroSearchController::class, 'search'])->name('numero.search');
-*/
 // Note Routes
 Route::get('/manageNote', [NoteController::class, 'manageNote'])->name('note.manage');
 Route::post('/manageNote', [NoteController::class, 'store']);

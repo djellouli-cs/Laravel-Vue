@@ -1,25 +1,28 @@
 <template>
-  <div>
-    <h1>REPARTITEUR SWD</h1>
+  <div class="p-6 min-h-screen bg-gradient-to-br from-blue-50 to-white">
+    <h1 class="text-3xl font-extrabold mb-6 text-blue-800">REPARTITEUR SWD</h1>
 
-    <!-- Technologie Filter -->
-    <select v-model="selectedTechnologie" @change="onTechnologieChange" class="select-field">
-      <option value="">All Technologies</option>
-      <option v-for="tech in technologies" :key="tech.id" :value="tech.id">
-        {{ tech.name }}
-      </option>
-    </select>
+    <!-- Filters: SWD first, then Technologie -->
+    <div class="flex gap-4 mb-6 flex-wrap">
+      <!-- SWD Filter -->
+      <select v-model="searchNumber" @change="loadSWDData" class="px-4 py-2 border rounded-lg text-lg">
+        <option value="" disabled selected>REGLETTE SWD</option>
+        <option v-for="num in availableSWDs" :key="num" :value="num">
+          SWD {{ num }}
+        </option>
+      </select>
 
-    <!-- SWD Filter -->
-    <select v-model="searchNumber" @change="loadSWDData" class="select-field">
-      <option value="" disabled selected>REGLETTE SWD</option>
-      <option v-for="num in availableSWDs" :key="num" :value="num">
-        SWD {{ num }}
-      </option>
-    </select>
+      <!-- Technologie Filter -->
+      <select v-model="selectedTechnologie" @change="onTechnologieChange" class="px-4 py-2 border rounded-lg text-lg">
+        <option value="">All Technologies</option>
+        <option v-for="tech in technologies" :key="tech.id" :value="tech.id">
+          {{ tech.name }}
+        </option>
+      </select>
+    </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="loading">Loading...</div>
+    <div v-if="loading" class="text-center py-4 text-blue-700 font-semibold">Loading...</div>
 
     <div v-else>
       <table v-if="filteredAcheminements.length > 0" class="reglette">
@@ -29,13 +32,14 @@
           </tr>
         </thead>
         <tbody>
-          <!-- First Row -->
+          <!-- First Row: main NDappel in selected SWD -->
           <tr>
             <td v-for="num in 25" :key="'row1-' + num" class="slot">
               <div v-if="getAcheminementsByColumn(num).length">
                 <span
                   @mouseenter="showTooltip($event, getDestination(getAcheminementsByColumn(num)[0]))"
                   @mouseleave="hideTooltip"
+                  @dblclick="goToAnnuaire(getAcheminementsByColumn(num)[0].numero.NDappel)"
                   :class="{ 'highlight-tech': isTechnologieHighlighted(getAcheminementsByColumn(num)[0]) }"
                   class="jack-number"
                 >
@@ -48,10 +52,10 @@
             </td>
           </tr>
 
-          <!-- Extra Acheminements -->
+          <!-- Second Row: all other acheminements for same NDappel (any SWD) -->
           <tr>
             <td v-for="num in 25" :key="'row2-' + num" class="slot">
-              <div v-for="(extra, index) in getAcheminementsByNDappel(num)" :key="index">
+              <div v-for="(extra, index) in getOtherAcheminements(num)" :key="index">
                 <span
                   @mouseenter="showTooltip($event, getDestination(extra))"
                   @mouseleave="hideTooltip"
@@ -65,7 +69,7 @@
             </td>
           </tr>
 
-          <!-- Other NDappel -->
+          <!-- Third Row: other NDappel in the same SWD -->
           <tr>
             <td v-for="num in 25" :key="'row3-' + num" class="slot">
               <div v-for="(extra, index) in getAcheminementsByColumn(num).slice(1)" :key="index">
@@ -98,6 +102,8 @@
 
 <script>
 import Layout from "@/Layouts/LayoutAutocom.vue";
+import { router } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 
 export default {
   layout: Layout,
@@ -111,116 +117,81 @@ export default {
       searchNumber: "",
       selectedTechnologie: "",
       filteredAcheminements: [],
-      tooltip: {
-        visible: false,
-        text: "",
-        x: 0,
-        y: 0
-      }
+      tooltip: { visible: false, text: "", x: 0, y: 0 }
     };
   },
   computed: {
     availableSWDs() {
       let results = this.acheminements;
-
       if (this.selectedTechnologie) {
-        results = results.filter(
-          (a) => a.numero?.technologie?.id == this.selectedTechnologie
-        );
+        results = results.filter(a => a.numero?.technologie?.id == this.selectedTechnologie);
       }
-
       const swdNumbers = new Set();
-      results.forEach((a) => {
+      results.forEach(a => {
         const match = a.acheminement.match(/SWD\s+(\d+)/);
-        if (match) {
-          swdNumbers.add(parseInt(match[1]));
-        }
+        if (match) swdNumbers.add(parseInt(match[1]));
       });
-
       return Array.from(swdNumbers).sort((a, b) => a - b);
     }
   },
   methods: {
     onTechnologieChange() {
-      this.searchNumber = "";
+      this.loadSWDData(); // keep selected SWD
     },
-
     loadSWDData() {
       this.loading = true;
       setTimeout(() => {
         let results = this.acheminements;
 
         if (this.searchNumber && !isNaN(this.searchNumber)) {
-          results = results.filter((a) =>
-            a.acheminement.includes(`SWD ${this.searchNumber}`)
-          );
+          results = results.filter(a => a.acheminement.includes(`SWD ${this.searchNumber}`));
+        }
+
+        if (this.selectedTechnologie) {
+          results = results.filter(a => a.numero?.technologie?.id == this.selectedTechnologie);
         }
 
         this.filteredAcheminements = results;
         this.loading = false;
-      }, 200);
+      }, 100);
     },
 
     getAcheminementsByColumn(column) {
       return this.filteredAcheminements.filter(
-        (ach) => ach.acheminement === `SWD ${this.searchNumber} ${column}`
+        ach => ach.acheminement === `SWD ${this.searchNumber} ${column}`
       );
     },
 
-    getAcheminementsByNDappel(column) {
+    // new: get all other acheminements for same NDappel, any SWD
+    getOtherAcheminements(column) {
       const first = this.getAcheminementsByColumn(column)[0];
       if (!first) return [];
-      return this.filteredAcheminements.filter(
-        (ach) =>
-          ach.numero?.NDappel === first.numero?.NDappel &&
-          ach.acheminement !== first.acheminement
+      const ndappel = first.numero?.NDappel;
+      if (!ndappel) return [];
+      return this.acheminements.filter(
+        ach => ach.numero?.NDappel === ndappel && ach !== first
       );
     },
 
     getDestination(acheminement) {
       if (!acheminement) return "<div>No Destination</div>";
-      let html = [];
-
-      if (acheminement?.numero?.fax) {
-        html.push(`<div>📠 FAX</div>`);
+      const html = [];
+      if (acheminement.numero?.fax) html.push(`<div>📠 FAX</div>`);
+      if (acheminement.numero?.Position) html.push(`<div>📍 ${acheminement.numero.Position}</div>`);
+      if (acheminement.numero?.destination) {
+        html.push(`<div>🏛 <strong style="font-size:18px;">${acheminement.numero.destination.name}</strong><br><span style="font-size:14px; color:#ccc;">${acheminement.numero.destination.name_fr}</span></div>`);
       }
-      if (acheminement?.numero?.Position) {
-        html.push(`<div>📍 ${acheminement.numero.Position}</div>`);
+      if (acheminement.numero?.organisme) {
+        html.push(`<div>🏢 <strong style="font-size:18px;">${acheminement.numero.organisme.name}</strong><br><span style="font-size:14px; color:#ccc;">${acheminement.numero.organisme.name_fr}</span></div>`);
       }
-      if (acheminement?.numero?.destination) {
-        html.push(`
-          <div>
-            🏛 <strong style="font-size:18px;">${acheminement.numero.destination.name}</strong><br>
-            <span style="font-size:14px; color:#ccc;">${acheminement.numero.destination.name_fr}</span>
-          </div>
-        `);
-      }
-      if (acheminement?.numero?.organisme) {
-        html.push(`
-          <div>
-            🏢 <strong style="font-size:18px;">${acheminement.numero.organisme.name}</strong><br>
-            <span style="font-size:14px; color:#ccc;">${acheminement.numero.organisme.name_fr}</span>
-          </div>
-        `);
-      }
-      if (acheminement?.updated_at) {
-        html.push(`<div>🗓 ${acheminement.updated_at.slice(0, 10)}</div>`);
-      }
-      if (acheminement?.description) {
-        html.push(`<div>ℹ️ ${acheminement.description}</div>`);
-      }
-      if (acheminement?.acheminement) {
-        html.push(`<div>🔌 ${acheminement.acheminement}</div>`);
-      }
-
+      if (acheminement.updated_at) html.push(`<div>🗓 ${acheminement.updated_at.slice(0,10)}</div>`);
+      if (acheminement.description) html.push(`<div>ℹ️ ${acheminement.description}</div>`);
+      if (acheminement.acheminement) html.push(`<div>🔌 ${acheminement.acheminement}</div>`);
       return html.join("");
     },
 
     isTechnologieHighlighted(acheminement) {
-      return (
-        this.selectedTechnologie &&
-        acheminement.numero?.technologie?.id == this.selectedTechnologie
-      );
+      return this.selectedTechnologie && acheminement.numero?.technologie?.id == this.selectedTechnologie;
     },
 
     showTooltip(event, text) {
@@ -229,9 +200,10 @@ export default {
       this.tooltip.y = event.pageY + 15;
       this.tooltip.visible = true;
     },
-
-    hideTooltip() {
-      this.tooltip.visible = false;
+    hideTooltip() { this.tooltip.visible = false; },
+    goToAnnuaire(ndappel) {
+      if (!ndappel) return;
+      router.visit(route('Annuaire.index', { ndappel }));
     }
   },
   created() {
@@ -241,89 +213,16 @@ export default {
 </script>
 
 <style scoped>
-.select-field {
-  margin-bottom: 20px;
-  padding: 8px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* Reglette styling */
-.reglette {
-  border-collapse: separate;
-  border-spacing: 4px;
-  background: #333;
-  padding: 8px;
-  border-radius: 8px;
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
-}
-
-.reglette th {
-  background: #222;
-  color: #fff;
-  padding: 6px;
-  font-weight: bold;
-  text-align: center;
-  border-radius: 4px;
-}
-
-.slot {
-  background: linear-gradient(145deg, #555, #444);
-  border-radius: 6px;
-  padding: 4px;
-  height: 60px;
-  vertical-align: middle;
-  box-shadow:
-    inset 0 -2px 3px rgba(0,0,0,0.5),
-    inset 0 2px 3px rgba(255,255,255,0.1);
-}
-
-.jack-number {
-  display: inline-block;
-  background: radial-gradient(circle at 30% 30%, #ffcc00, #cc9900);
-  padding: 4px 6px;
-  border-radius: 4px;
-  font-weight: bold;
-  color: #000;
-  box-shadow: inset 0 -1px 2px rgba(0,0,0,0.4);
-  cursor: pointer;
-}
-
-.jack-number.secondary {
-  background: radial-gradient(circle at 30% 30%, #00bfff, #0077aa);
-  color: white;
-}
-
-.jack-number:hover {
-  background: radial-gradient(circle at 30% 30%, #ffdd33, #cc9900);
-}
-
-.desc {
-  display: block;
-  font-size: 12px;
-  color: #ccc;
-  margin-top: 4px;
-}
-
-.highlight-tech {
-  outline: 2px solid #ff5733;
-}
-
-.text-orange-700 {
-  color: #c05621;
-}
-
-/* Tooltip styling */
-.custom-tooltip {
-  position: absolute;
-  background-color: rgba(0, 0, 0, 0.95);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 6px;
-  font-size: 16px;
-  max-width: 400px;
-  z-index: 9999;
-  pointer-events: none;
-}
+/* Keep your panel look */
+.select-field { margin-bottom: 20px; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
+.reglette { border-collapse: separate; border-spacing: 4px; background: #333; padding: 8px; border-radius: 8px; box-shadow: inset 0 0 8px rgba(0,0,0,0.8); }
+.reglette th { background: #222; color: #fff; padding: 6px; font-weight: bold; text-align: center; border-radius: 4px; }
+.slot { background: linear-gradient(145deg, #555, #444); border-radius: 6px; padding: 4px; height: 60px; vertical-align: middle; box-shadow: inset 0 -2px 3px rgba(0,0,0,0.5), inset 0 2px 3px rgba(255,255,255,0.1); }
+.jack-number { display: inline-block; background: radial-gradient(circle at 30% 30%, #ffcc00, #cc9900); padding: 4px 6px; border-radius: 4px; font-weight: bold; color: #000; box-shadow: inset 0 -1px 2px rgba(0,0,0,0.4); cursor: pointer; }
+.jack-number.secondary { background: radial-gradient(circle at 30% 30%, #00bfff, #0077aa); color: white; }
+.jack-number:hover { background: radial-gradient(circle at 30% 30%, #ffdd33, #cc9900); }
+.desc { display: block; font-size: 12px; color: #ccc; margin-top: 4px; }
+.highlight-tech { outline: 2px solid #ff5733; }
+.text-orange-700 { color: #c05621; }
+.custom-tooltip { position: absolute; background-color: rgba(0,0,0,0.95); color: white; padding: 12px 16px; border-radius: 6px; font-size: 16px; max-width: 400px; z-index: 9999; pointer-events: none; }
 </style>
