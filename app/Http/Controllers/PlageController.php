@@ -44,7 +44,7 @@ class PlageController extends Controller
     public function plageUse()
 {
     return Inertia::render('plage/plage', [
-        'ipaddresses' => IpAddress::with('plage')->get()
+        'ipaddresses' => IpAddress::with('Plage')->get()
     ]);
 }
  public function plageNoUse()
