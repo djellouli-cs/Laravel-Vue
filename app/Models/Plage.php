@@ -13,11 +13,11 @@ class Plage extends Model
     protected $fillable = [
         'ipAdresses',
         'direction',
-        // Other fillable fields
+        // Add other fillable fields if needed
     ];
 
     public function ipaddresses()
     {
-        return $this->belongsTo(IpAddress::class, 'ipAdresses', 'ipAdresses');
+        return $this->hasMany(IpAddress::class, 'ipAdresses', 'ipAdresses');
     }
 }
