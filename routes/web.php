@@ -5,7 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IpAddressController;
 use App\Models\User;
-use App\Models\plage;
+use App\Models\Plage;
 use Illuminate\Http\Request;
 use App\Http\Controllers\PlageController;
 use App\Http\Controllers\NetworkController;
@@ -182,7 +182,7 @@ Route::post('/register',[AuthController::class,'register']);
 
     Route::get('plageTable', function (Request $request) {
     return inertia('plage/PlageTable', [
-        'plages' => plage::when($request->search, function ($query) use ($request) {
+        'plages' => Plage::when($request->search, function ($query) use ($request) {
             $query->where('name', 'like', '%' . $request->search . '%');
         })->paginate(5)->withQueryString(),
         'searchTeam'=>$request->search
