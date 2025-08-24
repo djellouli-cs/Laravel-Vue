@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-use App\Models\plage;
+use App\Models\Plage;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,7 +25,7 @@ class IpAddress extends Model
     public $timestamps = true;
 public function plage()
     {
-        return $this->belongsTo(plage::class,'ipAdresses','ipAdresses');
+        return $this->belongsTo(Plage::class,'ipAdresses','ipAdresses');
     }
 
 }
