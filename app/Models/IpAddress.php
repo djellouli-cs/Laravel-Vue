@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Plage;
 
 class IpAddress extends Model
 {
@@ -12,7 +11,12 @@ class IpAddress extends Model
 
     protected $fillable = [
         'ipAdresses',
-        'some_other_fields', // Replace with your actual columns
+        'destination',
+        'organisme',
+        'Application',
+        'port',
+        'mask',
+        'note',
     ];
 
     public function plage()

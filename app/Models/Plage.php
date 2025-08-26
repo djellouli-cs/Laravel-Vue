@@ -11,13 +11,16 @@ class Plage extends Model
     use HasFactory;
 
     protected $fillable = [
-        'ipAdresses',
+        'ipAdresses', // ⚠️ this might not be needed anymore if you are now using plage_id
         'direction',
-        // Add other fillable fields if needed
     ];
 
-    public function ipaddresses()
+    /**
+     * Relation: One Plage has many IpAddresses
+     */
+    public function ipAddresses()
     {
         return $this->hasMany(IpAddress::class, 'ipAdresses', 'ipAdresses');
+        
     }
 }
