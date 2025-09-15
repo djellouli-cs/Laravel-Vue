@@ -1,12 +1,13 @@
 <template>
-  <div class="max-w-5xl mx-auto p-6 bg-white shadow rounded-md">
-    <h1 class="text-2xl font-bold mb-6 text-gray-800">Recherche avancée des Numéros</h1>
+  <div class="max-w-5xl mx-auto p-6 bg-white shadow-md rounded-md">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Recherche avancée des Numéros</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
       <!-- Organisme -->
       <div>
-        <label class="block mb-1 font-semibold">Organisme</label>
-        <select v-model="selectedOrganismes" multiple class="w-full border rounded px-3 py-2 h-32">
+        <label class="block mb-1 font-medium text-gray-700">Organisme</label>
+        <select v-model="selectedOrganismes" multiple 
+                class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="org in availableOrganismes" :key="org.id" :value="org.id">{{ org.name }}</option>
         </select>
         <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
@@ -14,8 +15,9 @@
 
       <!-- Destination -->
       <div>
-        <label class="block mb-1 font-semibold">Destination</label>
-        <select v-model="selectedDestinations" multiple class="w-full border rounded px-3 py-2 h-32">
+        <label class="block mb-1 font-medium text-gray-700">Destination</label>
+        <select v-model="selectedDestinations" multiple
+                class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="dest in availableDestinations" :key="dest.id" :value="dest.id">{{ dest.name }}</option>
         </select>
         <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
@@ -23,8 +25,9 @@
 
       <!-- Service -->
       <div>
-        <label class="block mb-1 font-semibold">Service</label>
-        <select v-model="selectedServices" multiple class="w-full border rounded px-3 py-2 h-32">
+        <label class="block mb-1 font-medium text-gray-700">Service</label>
+        <select v-model="selectedServices" multiple
+                class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="srv in availableServices" :key="srv.id" :value="srv.id">{{ srv.name }}</option>
         </select>
         <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
@@ -32,8 +35,9 @@
 
       <!-- Technologie -->
       <div>
-        <label class="block mb-1 font-semibold">Technologie</label>
-        <select v-model="selectedTechnologies" multiple class="w-full border rounded px-3 py-2 h-32">
+        <label class="block mb-1 font-medium text-gray-700">Technologie</label>
+        <select v-model="selectedTechnologies" multiple
+                class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="tech in availableTechnologies" :key="tech.id" :value="tech.id">{{ tech.name }}</option>
         </select>
         <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
@@ -41,8 +45,9 @@
 
       <!-- Groupe -->
       <div>
-        <label class="block mb-1 font-semibold">Groupe</label>
-        <select v-model="selectedGroupes" multiple class="w-full border rounded px-3 py-2 h-32">
+        <label class="block mb-1 font-medium text-gray-700">Groupe</label>
+        <select v-model="selectedGroupes" multiple
+                class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="groupe in availableGroupes" :key="groupe.id" :value="groupe.id">{{ groupe.groupes }}</option>
         </select>
         <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
@@ -51,22 +56,22 @@
 
     <div class="mb-4 flex justify-end gap-4">
       <button @click="toggleSort"
-              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200">
         {{ sortOrder === 'asc' ? '↑' : '↓' }} Trier par Matricule
       </button>
       <button @click="resetFilters"
-              class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+              class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition duration-200">
         Annuler Filtrage
       </button>
       <button @click="exportToWord"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200">
         Exporter en Word
       </button>
     </div>
 
-    <table class="w-full border border-collapse text-sm">
+    <table class="min-w-full border border-collapse text-sm table-auto">
       <thead>
-        <tr class="bg-gray-100">
+        <tr class="bg-gray-100 text-gray-700">
           <th class="border px-2 py-1">NDappel</th>
           <th class="border px-2 py-1">Organisme</th>
           <th class="border px-2 py-1">Destination</th>
@@ -77,7 +82,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="num in filteredNumeros" :key="num.id">
+        <tr v-for="num in filteredNumeros" :key="num.id" class="hover:bg-gray-50 even:bg-gray-100">
           <td class="border px-2 py-1">{{ num.NDappel }}</td>
           <td class="border px-2 py-1">{{ num.organisme?.name || '—' }}</td>
           <td class="border px-2 py-1">{{ num.destination?.name || '—' }}</td>
@@ -86,11 +91,8 @@
           <td class="border px-2 py-1">{{ num.matricule?.matricule || '—' }}</td>
           <td class="border px-2 py-1">
             <div v-if="num.destination?.groupes && num.destination.groupes.length > 0" class="flex flex-wrap gap-1">
-              <span 
-                v-for="groupe in num.destination.groupes" 
-                :key="groupe.id"
-                class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
-              >
+              <span v-for="groupe in num.destination.groupes" :key="groupe.id"
+                    class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                 {{ groupe.groupes }}
               </span>
             </div>

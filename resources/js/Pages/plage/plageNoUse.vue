@@ -89,9 +89,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import axios from 'axios'
-import { usePage } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import Layout from '@/Layouts/LayoutNetwork.vue'
 
 defineOptions({ layout: Layout })
@@ -118,6 +118,7 @@ const filteredAddresses = computed(() => {
   return rawAddresses.value.filter(addr => {
     const inSelectedPlage = !plage.value || addr.direction === plage.value
     if (showAll.value) return inSelectedPlage
+    // Non utilisées = ipaddresses empty
     const notUsed = addr.ipaddresses.length === 0
     return inSelectedPlage && notUsed
   })
@@ -154,11 +155,6 @@ const pingPlageAddresses = async () => {
   await Promise.all(promises)
   isPinging.value = false
 }
-
-// ✅ Live auto-ping when selecting plage or toggling showAll
-watch([plage, showAll], () => {
-  pingPlageAddresses()
-})
 
 const toggleShowAll = () => {
   showAll.value = !showAll.value
