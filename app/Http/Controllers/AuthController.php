@@ -6,36 +6,40 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\Destination;
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        if ($request->hasFile('avatar')) {
-            Storage::disk('public')->put('avatars',$request->avatar);
-        }
-       // dd('ok');
 
-        // Validate input
-        $fields = $request->validate([
-            'avatar'=>['file','nullable','max:300'],
-            'name' => ['required', 'max:255'],
-            'email' => ['required', 'max:255', 'email', 'unique:users'],
-            'password' => ['required', 'confirmed'],
-        ]);
-        if ($request->hasFile('avatar')) {
-            $fields['avatar']= Storage::disk('public')->put('avatars',$request->avatar);
-        }
-        // Register the user with hashed password
-        $user = User::create($fields);
+public function register(Request $request)
+{
+    // Validate inputs
+    $fields = $request->validate([
+        'destination_id' => ['required', 'exists:destinations,id'],
+        'email' => ['required', 'email', 'unique:users'],
+        'password' => ['required', 'confirmed'],
+        'avatar' => ['nullable', 'file', 'max:300'],
+    ]);
 
-        // Log the user in
-        Auth::login($user);
+    // Get destination name from destination_id
+    $destination = Destination::find($request->destination_id);
+    $fields['name'] = $destination->name;
 
-        // Redirect to home
-        return redirect()->route('dashboard')->with('greet', 'welcom in DTN32');
+    // Store avatar (if any)
+    if ($request->hasFile('avatar')) {
+        $fields['avatar'] = $request->file('avatar')->store('avatars', 'public');
     }
-   
+
+    // Hash password
+    $fields['password'] = bcrypt($fields['password']);
+
+    // Create user
+    $user = User::create($fields);
+
+    Auth::login($user);
+
+    return redirect()->route('dashboard')->with('greet', 'Welcome to DTN32!');
+}
+
     public function login(Request $request)
     {
         $credentials = $request->validate([

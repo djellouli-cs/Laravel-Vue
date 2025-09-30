@@ -29,11 +29,17 @@ use App\Http\Controllers\GroupeController;
 use App\Http\Controllers\PermanenceController;
 use App\Http\Controllers\FaxController;
 use App\Http\Controllers\AdslController;
+use App\Http\Controllers\UserController;
+use App\Models\Destination;
 
 
 ////////////////////////////////////////////////Annuaire
 
 // web.php (Inertia routes)
+//user Edite
+Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+Route::patch('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
+
 //SWD
 
 Route::get('/acheminements', [AcheminementController::class, 'swd'])->name('acheminements.index');
@@ -159,10 +165,15 @@ Route::get('/ping', [NetworkController::class, 'ping'])->name('ip.ping');
 
 Route::inertia('/','Auth/Login')->name('login');
 Route::post('/',[AuthController::class,'login']);
-
-Route::inertia('/register','Auth/Register')->name('register');
-Route::post('/register',[AuthController::class,'register']);
-
+//register
+Route::post('/register', [AuthController::class, 'register']);
+Route::get('/register', function () {
+    return inertia('Auth/Register', [
+        'destinations' => Destination::where('organisme_id', 158)
+            ->select('id', 'name')
+            ->get()
+    ]);
+})->name('register');
 //Route::middleware('auth')->group(function(){
    
     Route::get('/dashboard', function (Request $request) {

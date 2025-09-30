@@ -1,18 +1,23 @@
 <script setup>
-import Layout from '@/Layouts/LayoutNetwork.vue';
-import { Head } from '@inertiajs/vue3';
-import { useForm } from '@inertiajs/vue3';
+import Layout from '@/Layouts/LayoutAnnuaire.vue';
+import { Head, useForm } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import Textinput from '../Components/Textinput.vue';
+import { onMounted, ref } from 'vue';
 
 defineOptions({ layout: Layout });
 
+// Destinations list passed from backend
+const props = defineProps({
+  destinations: Array,
+});
+
 const form = useForm({
-  name: null,
+  destination_id: null, // used to fetch name from Destination
   email: null,
   password: null,
   password_confirmation: null,
-  avatar: null
+  avatar: null,
 });
 
 const change = (e) => {
@@ -20,10 +25,11 @@ const change = (e) => {
 };
 
 const submit = () => {
-  form.post(route('register'));
+  form.post(route('register'), {
+    forceFormData: true, // important to upload files
+  });
 };
 </script>
-
 <template>
   <Head title="Register" />
   
@@ -48,12 +54,25 @@ const submit = () => {
           <p v-if="form.errors.avatar" class="text-red-500 text-sm mt-1">{{ form.errors.avatar }}</p>
         </div>
 
-        <!-- Name -->
-        <Textinput 
-          name="name"  
-          v-model="form.name" 
-          :message="form.errors.name"
-        />
+        <!-- Destination Select -->
+        <div class="mb-4">
+          <label for="destination_id" class="block text-gray-700 font-medium mb-1">Select Destination</label>
+          <select
+            id="destination_id"
+            v-model="form.destination_id"
+            class="w-full border rounded px-3 py-2"
+          >
+            <option value="">-- Select a destination --</option>
+            <option 
+              v-for="dest in destinations" 
+              :key="dest.id" 
+              :value="dest.id"
+            >
+              {{ dest.name }}
+            </option>
+          </select>
+          <p v-if="form.errors.destination_id" class="text-red-500 text-sm mt-1">{{ form.errors.destination_id }}</p>
+        </div>
 
         <!-- Email -->
         <Textinput 
