@@ -23,7 +23,7 @@ class UserController extends Controller
     public function updateRole(Request $request, User $user)
     {
         $request->validate([
-            'role' => ['required', 'in:user,admin'],
+            'role' => ['required', 'in:user,admin,standard'],
         ]);
 
         $user->role = $request->role;

@@ -246,122 +246,109 @@
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue'
+<script setup>
+import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
+import Layout from '@/Layouts/LayoutEdit.vue'
 
-export default {
-  props: {
-    adslFactures: {
-      type: Array,
-      default: () => []
-    },
-    statistics: {
-      type: Object,
-      default: () => ({})
-    }
+defineOptions({ layout: Layout })
+
+// Props in <script setup>
+const props = defineProps({
+  adslFactures: {
+    type: Array,
+    default: () => []
   },
-  setup() {
-    const showCreateModal = ref(false)
-    const showEditModal = ref(false)
-    const editingFacture = ref(null)
-    
-    const form = ref({
-      ndappel: '',
-      adsl_provider: '',
-      adsl_plan: '',
-      adsl_monthly_cost: '',
-      adsl_start_date: '',
-      adsl_end_date: '',
-      adsl_notes: ''
-    })
+  statistics: {
+    type: Object,
+    default: () => ({})
+  }
+})
 
-    const resetForm = () => {
-      form.value = {
-        ndappel: '',
-        adsl_provider: '',
-        adsl_plan: '',
-        adsl_monthly_cost: '',
-        adsl_start_date: '',
-        adsl_end_date: '',
-        adsl_notes: ''
-      }
-    }
+const showCreateModal = ref(false)
+const showEditModal = ref(false)
+const editingFacture = ref(null)
 
-    const closeModal = () => {
-      showCreateModal.value = false
-      showEditModal.value = false
-      editingFacture.value = null
-      resetForm()
-    }
+const form = ref({
+  ndappel: '',
+  adsl_provider: '',
+  adsl_plan: '',
+  adsl_monthly_cost: '',
+  adsl_start_date: '',
+  adsl_end_date: '',
+  adsl_notes: ''
+})
 
-    const createAdslFacture = () => {
-      router.post(route('adsl.factures.create'), form.value, {
-        onSuccess: () => {
-          closeModal()
-          router.reload()
-        }
-      })
-    }
-
-    const editFacture = (facture) => {
-      editingFacture.value = facture
-      form.value = {
-        ndappel: facture.numeros?.[0]?.NDappel || '',
-        adsl_provider: facture.adsl_provider || '',
-        adsl_plan: facture.adsl_plan || '',
-        adsl_monthly_cost: facture.adsl_monthly_cost || '',
-        adsl_start_date: facture.adsl_start_date || '',
-        adsl_end_date: facture.adsl_end_date || '',
-        adsl_notes: facture.adsl_notes || ''
-      }
-      showEditModal.value = true
-    }
-
-    const updateAdslFacture = () => {
-      router.put(route('adsl.factures.update', editingFacture.value.id), form.value, {
-        onSuccess: () => {
-          closeModal()
-          router.reload()
-        }
-      })
-    }
-
-    const deleteFacture = (id) => {
-      if (confirm('Are you sure you want to delete this ADSL service?')) {
-        router.delete(route('adsl.factures.destroy', id), {
-          onSuccess: () => {
-            router.reload()
-          }
-        })
-      }
-    }
-
-    const formatCurrency = (amount) => {
-      return new Intl.NumberFormat('ar-DZ', {
-        style: 'currency',
-        currency: 'DZD'
-      }).format(amount || 0)
-    }
-
-    const formatDate = (date) => {
-      if (!date) return 'N/A'
-      return new Date(date).toLocaleDateString('fr-FR')
-    }
-
-    return {
-      showCreateModal,
-      showEditModal,
-      editingFacture,
-      form,
-      closeModal,
-      createAdslFacture,
-      editFacture,
-      updateAdslFacture,
-      deleteFacture,
-      formatCurrency,
-      formatDate
-    }
+const resetForm = () => {
+  form.value = {
+    ndappel: '',
+    adsl_provider: '',
+    adsl_plan: '',
+    adsl_monthly_cost: '',
+    adsl_start_date: '',
+    adsl_end_date: '',
+    adsl_notes: ''
   }
 }
-</script> 
+
+const closeModal = () => {
+  showCreateModal.value = false
+  showEditModal.value = false
+  editingFacture.value = null
+  resetForm()
+}
+
+const createAdslFacture = () => {
+  router.post(route('adsl.factures.create'), form.value, {
+    onSuccess: () => {
+      closeModal()
+      router.reload()
+    }
+  })
+}
+
+const editFacture = (facture) => {
+  editingFacture.value = facture
+  form.value = {
+    ndappel: facture.numeros?.[0]?.NDappel || '',
+    adsl_provider: facture.adsl_provider || '',
+    adsl_plan: facture.adsl_plan || '',
+    adsl_monthly_cost: facture.adsl_monthly_cost || '',
+    adsl_start_date: facture.adsl_start_date || '',
+    adsl_end_date: facture.adsl_end_date || '',
+    adsl_notes: facture.adsl_notes || ''
+  }
+  showEditModal.value = true
+}
+
+const updateAdslFacture = () => {
+  router.put(route('adsl.factures.update', editingFacture.value.id), form.value, {
+    onSuccess: () => {
+      closeModal()
+      router.reload()
+    }
+  })
+}
+
+const deleteFacture = (id) => {
+  if (confirm('Are you sure you want to delete this ADSL service?')) {
+    router.delete(route('adsl.factures.destroy', id), {
+      onSuccess: () => {
+        router.reload()
+      }
+    })
+  }
+}
+
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('ar-DZ', {
+    style: 'currency',
+    currency: 'DZD'
+  }).format(amount || 0)
+}
+
+const formatDate = (date) => {
+  if (!date) return 'N/A'
+  return new Date(date).toLocaleDateString('fr-FR')
+}
+</script>

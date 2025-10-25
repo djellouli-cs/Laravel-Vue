@@ -95,6 +95,7 @@ const changeUserRole = (id, role) => {
             >
               <option value="user">user</option>
               <option value="admin">admin</option>
+              <option value="standard">standard</option>
             </select>
           </td>
 

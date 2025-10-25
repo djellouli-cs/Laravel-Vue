@@ -1,73 +1,60 @@
-<script setup>
+<script>
 import HelloWorld from '@/Pages/HelloWorldAnnuaire.vue'
 import { Link, usePage } from '@inertiajs/vue3'
+// Remove LayoutFilter import
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-// Reactive state
-const showModal = ref(false)
-const permanence = ref(null)
-const buttonLabel = ref('Permanence')
-const prochainCount = ref(0)
-const hasProchainAlert = ref(false)
-
-// Access Inertia props
-const page = usePage()
-const auth = page.props.auth
-const currentPath = new URL(page.url, window.location.origin).pathname
-
-// Methods
-const linkClass = (routeName) => {
-  const routePath = new URL(route(routeName), window.location.origin).pathname
-  return [
-    'px-4 py-2 rounded-full transition-colors duration-200',
-    currentPath === routePath
-      ? 'bg-green-600 text-white'
-      : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-300'
-  ]
-}
-
-// Lifecycle
-onMounted(async () => {
-  try {
-    // Get current week permanence
-    const res = await axios.get('/api/permanence-this-week')
-    permanence.value = res.data
-    buttonLabel.value = res.data ? res.data.PSemaine : 'Permanence'
-    
-    // Check for PROCHAIN permanences
-    const prochainRes = await axios.get('/api/prochain-permanences')
-    prochainCount.value = prochainRes.data.count
-    hasProchainAlert.value = prochainCount.value > 0
-  } catch (error) {
-    console.error('Error fetching permanence data:', error)
+export default {
+  name: 'Layout',
+  components: {
+    HelloWorld,
+    Link
+    // Remove LayoutFilter from components
+  },
+  // Remove data property for showFilter
+  computed: {
+    auth() {
+      return usePage().props.auth
+    },
+    currentPath() {
+      return new URL(usePage().url, window.location.origin).pathname
+    }
+  },
+  methods: {
+    linkClass(routeName) {
+      const routePath = new URL(route(routeName), window.location.origin).pathname
+      return [
+        'px-4 py-2 rounded-full transition-colors duration-200',
+        this.currentPath === routePath
+          ? 'bg-green-600 text-white'
+          : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-300'
+      ]
+    }
+    // Remove openFilter, closeFilter, onFilter methods
   }
-})
+}
 </script>
 
 <template>
   <div class="min-h-screen flex flex-col bg-gray-100">
     <header class="bg-gray-800 text-white py-4 px-6 text-center shadow-lg relative">
       <!-- User Actions -->
-      <div v-if="auth.user && auth.user.role === 'admin'" class="absolute top-4 right-4 flex items-center space-x-4">
+      <div  class="absolute top-4 right-4 flex items-center space-x-4">
         <img 
           class="w-10 h-10 rounded-full border-2 border-yellow-500 shadow-md object-cover" 
           :src="auth.user.avatar ? ('/storage/' + auth.user.avatar) : '/default-avatar.png'" 
           :alt="auth.user.name"
           :title="auth.user.name"
         />
-        <Link :href="route('dashboard')" class="bg-yellow-700 hover:bg-yellow-600 text-white font-semibold py-1 px-3 rounded-full transition-all duration-200">Dashboard</Link>
         <Link :href="route('register')" class="bg-yellow-700 hover:bg-yellow-600 text-white font-semibold py-1 px-3 rounded-full transition-all duration-200">Register</Link>
         <Link href="/logout" method="post" as="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-full transition-all duration-200">Logout</Link>
-        <Link href="/Address" as="button" class="bg-green-700 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-full transition-all duration-200">Réseau</Link>
-        <Link :href="route('Annuaire.index')" as="button" class="bg-green-700 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-full transition-all duration-200">Home</Link>
+        <!-- Removed Filtrage link -->
       </div>
 
-      <div v-else class="absolute top-4 right-4 flex items-center space-x-4">
-        <Link href="/logout" method="post" as="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-full transition-all duration-200">Logout</Link>
-      </div>
+      
 
-      <HelloWorld msg="Annuaire ☎️" />
+      <HelloWorld msg="Standard ☎️" />
 
       <!-- Navigation -->
       <nav class="mt-6 flex flex-wrap justify-center gap-2 sm:gap-4 text-sm font-medium">
@@ -136,6 +123,7 @@ onMounted(async () => {
           </span>
         </Link>
       </nav>
+      <!-- Remove Filtrage Modal -->
     </header>
 
     <main class="flex-1 p-6">
@@ -147,6 +135,33 @@ onMounted(async () => {
     </footer>
   </div>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+
+const showModal = ref(false)
+const permanence = ref(null)
+const buttonLabel = ref('Permanence')
+const prochainCount = ref(0)
+const hasProchainAlert = ref(false)
+
+onMounted(async () => {
+  try {
+    // Get current week permanence
+    const res = await axios.get('/api/permanence-this-week')
+    permanence.value = res.data
+    buttonLabel.value = res.data ? res.data.PSemaine : 'Permanence'
+    
+    // Check for PROCHAIN permanences
+    const prochainRes = await axios.get('/api/prochain-permanences')
+    prochainCount.value = prochainRes.data.count
+    hasProchainAlert.value = prochainCount.value > 0
+  } catch (error) {
+    console.error('Error fetching permanence data:', error)
+  }
+})
+</script>
 
 <style scoped>
 .modal-backdrop {
