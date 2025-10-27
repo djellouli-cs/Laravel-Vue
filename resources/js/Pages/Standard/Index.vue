@@ -48,7 +48,7 @@
               index === activeIndex ? 'bg-green-100 font-semibold' : 'hover:bg-green-50'
             ]"
           >
-            📞 {{ num.NDappel }} — {{ num.nom }}
+            📞 {{ num.NDappel }} — {{ num.name }}
           </li>
           <li
             v-for="(org, index) in filteredOrganismes"
@@ -63,8 +63,69 @@
         </ul>
       </div>
 
+      <!-- 🏷️ Selected Tags -->
+      <div v-if="selectedOrganisme || selectedDestination" class="flex flex-wrap gap-2 mt-2 mb-4">
+        <!-- Organisme Tag -->
+        <div
+          v-if="selectedOrganisme"
+          class="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full shadow-sm text-sm font-medium"
+        >
+          🏢 <span>{{ selectedOrganisme }}</span>
+          <button
+            @click="selectedOrganisme = null; selectedDestination = null"
+            class="text-green-700 hover:text-green-900 ml-1"
+          >
+            ❌
+          </button>
+        </div>
+
+        <!-- Destination Tag -->
+        <div
+          v-if="selectedDestination"
+          class="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full shadow-sm text-sm font-medium"
+        >
+          🎯 <span>{{ selectedDestination }}</span>
+          <button
+            @click="selectedDestination = null"
+            class="text-green-700 hover:text-green-900 ml-1"
+          >
+            ❌
+          </button>
+        </div>
+
+        <!-- Clear All Tag -->
+        <div
+          class="flex items-center gap-2 bg-red-100 text-red-800 px-3 py-1 rounded-full shadow-sm text-sm font-medium cursor-pointer hover:bg-red-200 transition"
+          @click="clearAllFilters"
+        >
+          🧹 <span>{{ currentLang === 'ar' ? 'مسح الكل' : 'Clear All' }}</span>
+        </div>
+      </div>
+
+      <!-- 🏢 Destination Selector -->
+      <div v-if="selectedOrganisme && destinationsByOrganisme.length > 0" class="mt-2 space-y-3">
+        <label class="block text-green-700 font-medium mb-1">
+          {{ currentLang === 'ar' ? 'اختر الوجهة:' : 'Select Destination:' }}
+        </label>
+        <select
+          v-model="selectedDestination"
+          class="border border-green-300 rounded-lg px-3 py-2 text-green-800 w-full"
+        >
+          <option value="">
+            {{ currentLang === 'ar' ? 'بدون وجهة' : 'No destination' }}
+          </option>
+          <option
+            v-for="(dest, i) in destinationsByOrganisme"
+            :key="i"
+            :value="dest"
+          >
+            {{ dest }}
+          </option>
+        </select>
+      </div>
+
       <!-- 📋 Table -->
-      <table class="min-w-full border-collapse border mt-4">
+      <table class="min-w-full border-collapse border mt-6">
         <thead class="bg-green-50">
           <tr v-if="currentLang === 'ar'">
             <th class="border p-2 text-left">الرقم</th>
@@ -99,7 +160,7 @@
               {{ currentLang === 'fr' ? numero.service?.name_fr ?? '—' : numero.service?.name ?? '—' }}
             </td>
 
-            <!-- ✅ Editable NDappel on double-click if technologie = MOBILE -->
+            <!-- ✅ Editable NDappel -->
             <td class="border p-2" @dblclick="enableEdit(numero)">
               <input
                 v-if="numero.isEditing && numero.technologie?.name?.toUpperCase() === 'MOBILE'"
@@ -156,46 +217,95 @@ onMounted(() => {
 
 const normalize = v => String(v ?? '').trim().toLowerCase()
 
-// 🔍 Debounce
+// 🟢 Selected organisme + destination
+const selectedOrganisme = ref(null)
+const selectedDestination = ref(null)
+
+// 💾 Load saved filters from localStorage
+onMounted(() => {
+  const savedLang = localStorage.getItem('currentLang')
+  const savedSearch = localStorage.getItem('search')
+  const savedOrganisme = localStorage.getItem('selectedOrganisme')
+  const savedDestination = localStorage.getItem('selectedDestination')
+
+  if (savedLang) currentLang.value = savedLang
+  if (savedSearch) search.value = savedSearch
+  if (savedOrganisme) selectedOrganisme.value = savedOrganisme
+  if (savedDestination) selectedDestination.value = savedDestination
+})
+
+// 🧹 Clear filters
+function clearAllFilters() {
+  selectedOrganisme.value = null
+  selectedDestination.value = null
+  search.value = ''
+  debouncedSearch.value = ''
+  localStorage.removeItem('selectedOrganisme')
+  localStorage.removeItem('selectedDestination')
+  localStorage.removeItem('search')
+}
+
+// 🔍 Debounced search
 const debouncedSearch = ref('')
 watch(search, val => {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => (debouncedSearch.value = val), 200)
   activeIndex.value = -1
   showSuggestions.value = true
+  if (!val.trim()) clearAllFilters()
 })
 
-// 📋 Filtered table
+// 🧠 Save filters to localStorage
+watch(currentLang, val => localStorage.setItem('currentLang', val))
+watch(search, val => localStorage.setItem('search', val))
+watch(selectedOrganisme, val => {
+  if (val) localStorage.setItem('selectedOrganisme', val)
+  else localStorage.removeItem('selectedOrganisme')
+})
+watch(selectedDestination, val => {
+  if (val) localStorage.setItem('selectedDestination', val)
+  else localStorage.removeItem('selectedDestination')
+})
+
+// 🧭 Destinations for selected organisme
+const destinationsByOrganisme = computed(() => {
+  if (!selectedOrganisme.value) return []
+  return props.numeros
+    .filter(n => {
+      const orgName = currentLang.value === 'fr' ? n.organisme?.name_fr : n.organisme?.name
+      return orgName === selectedOrganisme.value
+    })
+    .map(n => currentLang.value === 'fr' ? n.destination?.name_fr : n.destination?.name)
+    .filter(Boolean)
+    .filter((v, i, self) => self.indexOf(v) === i)
+})
+
+// 📋 Table Filter
 const displayedNumeros = computed(() => {
   const q = normalize(debouncedSearch.value)
   return props.numeros.filter(n => {
     const NDappelStr = String(n.NDappel ?? '').toLowerCase()
-    return (
+    const matchesSearch =
       NDappelStr.includes(q) ||
-      normalize(n.nom).includes(q) ||
+      normalize(n.name).includes(q) ||
       normalize(currentLang.value === 'fr' ? n.organisme?.name_fr : n.organisme?.name).includes(q) ||
-      normalize(currentLang.value === 'fr' ? n.destination?.name_fr : n.destination?.name).includes(q) ||
-      normalize(currentLang.value === 'fr' ? n.technologie?.name_fr : n.technologie?.name).includes(q)
-    )
+      normalize(currentLang.value === 'fr' ? n.destination?.name_fr : n.destination?.name).includes(q)
+
+    const matchesOrganisme =
+      !selectedOrganisme.value ||
+      (currentLang.value === 'fr'
+        ? n.organisme?.name_fr === selectedOrganisme.value
+        : n.organisme?.name === selectedOrganisme.value)
+
+    const matchesDestination =
+      !selectedDestination.value ||
+      (currentLang.value === 'fr'
+        ? n.destination?.name_fr === selectedDestination.value
+        : n.destination?.name === selectedDestination.value)
+
+    return matchesSearch && matchesOrganisme && matchesDestination
   })
 })
-
-// 🟢 Enable editing on double-click (only for MOBILE)
-function enableEdit(numero) {
-  if (numero.technologie?.name?.toUpperCase() === 'MOBILE') {
-    numero.isEditing = true
-  }
-}
-
-// 💾 Save NDappel after edit
-function saveNDappel(numero) {
-  numero.isEditing = false
-  router.post(
-    '/numeros/update-ndappel',
-    { id: numero.id, NDappel: numero.NDappel },
-    { preserveScroll: true, preserveState: true }
-  )
-}
 
 // 💡 Suggestions
 const filteredSuggestions = computed(() => {
@@ -203,7 +313,7 @@ const filteredSuggestions = computed(() => {
   if (!q) return []
   return props.numeros.filter(n => {
     const NDappelStr = String(n.NDappel ?? '').toLowerCase()
-    return NDappelStr.includes(q) || normalize(n.nom).includes(q)
+    return NDappelStr.includes(q) || normalize(n.name).includes(q)
   }).slice(0, 5)
 })
 
@@ -225,12 +335,22 @@ const showSuggestionList = computed(
 )
 
 function selectSuggestion(value) {
+  const isOrganisme = filteredOrganismes.value.includes(value)
+  if (isOrganisme) {
+    selectedOrganisme.value = value
+    selectedDestination.value = null
+  } else {
+    selectedOrganisme.value = null
+    selectedDestination.value = null
+  }
+
   search.value = value
   debouncedSearch.value = value
   activeIndex.value = -1
   showSuggestions.value = false
 }
 
+// ⌨️ Keyboard Navigation
 function handleKeydown(e) {
   const total = filteredSuggestions.value.length + filteredOrganismes.value.length - 1
   if (e.key === 'ArrowDown') {
@@ -254,6 +374,7 @@ function handleKeydown(e) {
   }
 }
 
+// 🖱️ Click outside
 function onClickOutside(e) {
   if (!containerRef.value) return
   if (!containerRef.value.contains(e.target)) {
@@ -261,13 +382,17 @@ function onClickOutside(e) {
     activeIndex.value = -1
   }
 }
-
 onMounted(() => document.addEventListener('click', onClickOutside))
 onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
-</script>
 
-<style scoped>
-.bg-green-50 {
-  background-color: #f0fdf4;
+// 💾 Edit NDappel
+function enableEdit(numero) {
+  if (numero.technologie?.name?.toUpperCase() === 'MOBILE') {
+    numero.isEditing = true
+  }
 }
-</style>
+function saveNDappel(numero) {
+  numero.isEditing = false
+  router.post('/numeros/update-ndappel', { id: numero.id, NDappel: numero.NDappel }, { preserveScroll: true, preserveState: true })
+}
+</script>
