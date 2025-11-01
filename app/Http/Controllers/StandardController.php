@@ -28,8 +28,12 @@ class StandardController extends Controller
             'fax',
             'post',
         ])
-        ->orderBy('technologie_id')     // ✅ Order by technologie
-        ->orderBy('matricule_id')       // ✅ Then by matricule first
+        // ✅ Hide numeros with related type.name = 'PRIVEE1'
+        ->whereHas('type', function ($query) {
+            $query->where('name', '!=', 'PRIVEE1');
+        })
+        ->orderBy('technologie_id')
+        ->orderBy('matricule_id')
         ->get();
 
         return Inertia::render('Standard/Index', [
@@ -66,22 +70,25 @@ class StandardController extends Controller
             'numero' => $numero,
         ]);
     }
+
+    /**
+     * Update NDappel (only if technologie is MOBILE).
+     */
     public function updateNDappel(Request $request)
-{
-    $validated = $request->validate([
-        'id' => 'required|exists:numeros,id',
-        'NDappel' => 'required|string|max:255',
-    ]);
+    {
+        $validated = $request->validate([
+            'id' => 'required|exists:numeros,id',
+            'NDappel' => 'required|string|max:255',
+        ]);
 
-    $numero = Numero::find($validated['id']);
+        $numero = Numero::find($validated['id']);
 
-    // Update only if technologie is MOBILE
-    if (strtoupper($numero->technologie->name ?? '') === 'MOBILE') {
-        $numero->NDappel = $validated['NDappel'];
-        $numero->save();
+        // ✅ Update only if technologie is MOBILE
+        if (strtoupper($numero->technologie->name ?? '') === 'MOBILE') {
+            $numero->NDappel = $validated['NDappel'];
+            $numero->save();
+        }
+
+        return back();
     }
-
-    return back();
-}
-
 }

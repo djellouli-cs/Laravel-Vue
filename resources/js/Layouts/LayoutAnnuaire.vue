@@ -73,6 +73,13 @@ onMounted(async () => {
       <nav class="mt-6 flex flex-wrap justify-center gap-2 sm:gap-4 text-sm font-medium">
         <Link
           v-if="auth.user && auth.user.role === 'admin'"
+          :href="route('profile.show')"
+          :class="linkClass('profile.show')"
+        >
+          Profile
+        </Link>
+        <Link
+          v-if="auth.user && auth.user.role === 'admin'"
           :href="route('home')"
           :class="linkClass('home')"
         >

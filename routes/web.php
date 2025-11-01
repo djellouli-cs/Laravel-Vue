@@ -263,6 +263,17 @@ Route::delete('/manageStandard/{id}', [App\Http\Controllers\StandardController::
 Route::post('/numeros/update-ndappel', [StandardController::class, 'updateNDappel']);
 
 });
+//change password 
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+// profile
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile.show');
+    Route::put('/profile/change-password', [AuthController::class, 'changePassword'])->name('profile.password.update');
+});
+
+
+
 
 // Fallback
 Route::fallback(fn() => Inertia::render('NotFound')->toResponse(request())->setStatusCode(404));
