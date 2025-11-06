@@ -31,10 +31,47 @@
 
       <div>
         <label class="block text-sm font-medium mb-1">Acheminement</label>
-        <input v-model="form.acheminement" type="text" class="border rounded px-3 py-2 w-full" required />
+
+        <input
+          v-model="form.acheminement"
+          type="text"
+          class="border rounded px-3 py-2 w-full"
+          list="f"
+          placeholder="Ex: SWD 1 10"
+          required
+        />
+
+        <datalist id="f">
+          <option>SWD</option>
+          <option>DIVERS</option>
+          <option>EX PTT</option>
+          <option>RESIDENCE</option>
+          <option>AVAYA</option>
+          <option>DAL G</option>
+          <option>DAL D</option>
+          <option>RESEAU</option>
+          <option>DRAG</option>
+          <option>NORSTAR</option>
+          <option>ADM</option>
+          <option>SECT</option>
+          <option>IP 10.32.1.130</option>
+          <option>IP 10.32.2.130</option>
+          <option>IP 10.32.3.130</option>
+          <option>IP 10.32.4.130</option>
+          <option>IP 10.32.5.130</option>
+          <option>IP 10.32.6.130</option>
+          <option>IP 10.32.7.130</option>
+          <option>IP 10.32.8.130</option>
+        </datalist>
+
+        <!-- Live result message -->
+        <p v-if="calcAcheminement" class="mt-1 text-sm"
+           :class="calcAcheminement.includes('Bravo') ? 'text-green-600' : 'text-red-600'">
+          {{ calcAcheminement }}
+        </p>
       </div>
 
-      <!-- ✅ Description field -->
+      <!-- Description -->
       <div class="col-span-full">
         <label class="block text-sm font-medium mb-1">Description</label>
         <input v-model="form.description" type="text" class="border rounded px-3 py-2 w-full" placeholder="Optional description" />
@@ -57,7 +94,7 @@
           <th class="border px-2 py-1">ID</th>
           <th class="border px-2 py-1">Numero</th>
           <th class="border px-2 py-1">Acheminement</th>
-          <th class="border px-2 py-1">Description</th> <!-- ✅ -->
+          <th class="border px-2 py-1">Description</th>
           <th class="border px-2 py-1">Actions</th>
         </tr>
       </thead>
@@ -66,33 +103,22 @@
           <td class="border px-2 py-1">{{ item.id }}</td>
           <td class="border px-2 py-1">{{ item.numero?.NDappel || '—' }}</td>
           <td class="border px-2 py-1">{{ item.acheminement }}</td>
-          <td class="border px-2 py-1">{{ item.description || '—' }}</td> <!-- ✅ -->
+          <td class="border px-2 py-1">{{ item.description || '—' }}</td>
           <td class="border px-2 py-1 space-x-2">
             <button @click="edit(item)" class="text-blue-600 hover:underline">Edit</button>
             <button @click="destroy(item.id)" class="text-red-600 hover:underline">Delete</button>
           </td>
-        </tr>
-        <tr v-if="paginatedAcheminements.length === 0">
-          <td colspan="5" class="text-center text-gray-500 py-2">No acheminements found.</td>
         </tr>
       </tbody>
     </table>
 
     <!-- Pagination -->
     <div class="mt-4 flex justify-center gap-4 items-center">
-      <button
-        @click="currentPage--"
-        :disabled="currentPage === 1"
-        class="px-3 py-1 border rounded"
-      >
+      <button @click="currentPage--" :disabled="currentPage === 1" class="px-3 py-1 border rounded">
         Prev
       </button>
       <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button
-        @click="currentPage++"
-        :disabled="currentPage === totalPages"
-        class="px-3 py-1 border rounded"
-      >
+      <button @click="currentPage++" :disabled="currentPage === totalPages" class="px-3 py-1 border rounded">
         Next
       </button>
     </div>
@@ -113,78 +139,117 @@ const props = defineProps({
 
 const flash = usePage().props.flash || {}
 
-const form = ref({
-  id: null,
-  numero_id: '',
-  acheminement: '',
-  description: '', // ✅
-})
+const form = ref({ id: null, numero_id: '', acheminement: '', description: '' })
 
 const search = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 5
 
-// Filter list
+/* ✅ Acheminement live validation */
+const calcAcheminement = computed(() => {
+  const a = form.value.acheminement
+  if (!a) return ""
+
+  /* EX PTT */
+  if (a.startsWith("EX ")) {
+    let d = a.length - 1
+    if (a[d] === " " && d >= 8) return "il faut pas terminé avec espace. 😤"
+    if (a === "EX PTT") return "Ajouter un espace svp. 😇"
+    if (a === "EX PTT ") return "Ajouter la Position svp. 😇"
+    if (a.length <= 10 && a.startsWith("EX PTT ") && Number(a.substr(7, 3)) && parseInt(a.substr(7, 3)) <= 300)
+      return "Bravo 😁"
+    return "Faute 😡"
+  }
+
+  /* SWD + ADM (same logic) */
+if (a.startsWith("SWD") || a.startsWith("ADM")) {
+  let d = a.length - 1
+  if (a[d] === " " && d >= 7) return "il faut pas terminé avec espace. 😤"
+  if (a === "SWD" || a === "ADM") return "Ajouter un espace svp. 😇"
+  if (a === "SWD " || a === "ADM ") return "Ajouter la Reglette svp. 😇"
+  if (a.length <= 5 && (a.startsWith("SWD ") || a.startsWith("ADM ")) && Number(a.substr(4, 1)) && parseInt(a.substr(4, 1)) <= 8)
+    return "Ajouter un espace svp. 😇"
+  if (a.length <= 6 && (a.startsWith("SWD ") || a.startsWith("ADM ")) && Number(a.substr(4, 1)) && parseInt(a.substr(4, 1)) <= 8 && a.substr(5, 1) === " ")
+    return "Ajouter la Position svp. 😇"
+  if (a.length <= 8 && (a.startsWith("SWD ") || a.startsWith("ADM ")) && Number(a.substr(4, 1)) && parseInt(a.substr(4, 1)) <= 8 && a.substr(5, 1) === " " && Number(a.substr(6, 2)) && parseInt(a.substr(6, 2)) <= 25)
+    return "Bravo 😁"
+  return "Faute 😡"
+}
+
+  /* DIVERS */
+  if (a.startsWith("DIV")) {
+    let d = a.length - 1
+    if (a[d] === " " && d >= 10) return "il faut pas terminé avec espace. 😤"
+    if (a === "DIVERS") return "Ajouter un espace svp. 😇"
+    if (a === "DIVERS ") return "Ajouter la Reglette svp. 😇"
+    if (a.length <= 8 && a.startsWith("DIVERS ") && Number(a.substr(7, 1)) && parseInt(a.substr(7, 1)) <= 9)
+      return "Ajouter un espace svp. 😇"
+    if (a.length <= 9 && a.startsWith("DIVERS ") && Number(a.substr(7, 1)) && parseInt(a.substr(7, 1)) <= 9 && a.substr(8, 1) === " ")
+      return "Ajouter la Position svp. 😇"
+    if (a.length <= 11 && a.startsWith("DIVERS ") && Number(a.substr(7, 1)) && parseInt(a.substr(7, 1)) <= 10 && a.substr(8, 1) === " " && Number(a.substr(9, 2)) && parseInt(a.substr(9, 2)) <= 25)
+      return "Bravo 😁"
+    return "Faute 😡"
+  }
+
+  /* DAL G */
+  if (a.startsWith("DAL G")) {
+    if (a === "DAL G") return "Ajouter un espace svp. 😇"
+    if (a === "DAL G ") return "Ajouter la Reglette1 svp. 😇"
+    if (a.length === 7 && a.startsWith("DAL G ") && Number(a.substr(6, 1)) && parseInt(a.substr(6, 1)) <= 4)
+      return "Ajouter un espace svp. 😇"
+    if (a.length === 8 && a.startsWith("DAL G ") && Number(a.substr(6, 1)) && parseInt(a.substr(6, 1)) <= 4 && a.substr(7, 1) === " ")
+      return "Ajouter la Reglette2 svp. 😇"
+    if (a.length === 9 && a.startsWith("DAL G ") && Number(a.substr(6, 1)) && parseInt(a.substr(6, 1)) <= 4 && a.substr(7, 1) === " " && Number(a.substr(8, 1)) && parseInt(a.substr(8, 1)) <= 2)
+      return "Ajouter un espace svp. 😇"
+    if (a.length <= 12 && a.startsWith("DAL G ") && Number(a.substr(6, 1)) && parseInt(a.substr(6, 1)) <= 4 && a.substr(7, 1) === " " && Number(a.substr(8, 1)) && parseInt(a.substr(8, 1)) <= 2 && a.substr(9, 1) === " " && Number(a.substr(10, 2)) && parseInt(a.substr(10, 2)) <= 14)
+      return "Bravo 😁"
+    return "Faute 😡"
+  }
+
+  return ""
+})
+
+/* Filtering */
 const filtered = computed(() => {
   const q = search.value.toLowerCase()
   return props.acheminements.filter(item =>
     item.acheminement?.toLowerCase().includes(q) ||
     item.numero?.NDappel?.toLowerCase().includes(q) ||
-    item.description?.toLowerCase().includes(q) // ✅ search by description
+    item.description?.toLowerCase().includes(q)
   )
 })
 
-// Pagination
 const paginatedAcheminements = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   return filtered.value.slice(start, start + itemsPerPage)
 })
 
 const totalPages = computed(() => Math.ceil(filtered.value.length / itemsPerPage))
+watch(search, () => currentPage.value = 1)
 
-watch(search, () => { currentPage.value = 1 })
-
-// Filtered numeros for select
 const filteredNumeros = computed(() => {
   const q = search.value.toLowerCase()
   const matched = props.numeros.filter(n => n.NDappel?.toLowerCase().includes(q))
   const selected = props.numeros.find(n => n.id === form.value.numero_id)
-  if (selected && !matched.some(n => n.id === selected.id)) {
-    matched.push(selected)
-  }
+  if (selected && !matched.some(n => n.id === selected.id)) matched.push(selected)
   return matched
 })
 
+/* CRUD */
 const save = () => {
   const url = form.value.id ? `/manageAcheminement/${form.value.id}` : '/manageAcheminement'
   const method = form.value.id ? 'put' : 'post'
-  router[method](url, form.value, {
-    preserveScroll: true,
-    onSuccess: () => reset(),
-  })
+  router[method](url, form.value, { preserveScroll: true, onSuccess: () => reset() })
 }
 
 const edit = (item) => {
-  form.value = {
-    id: item.id,
-    numero_id: item.numero_id,
-    acheminement: item.acheminement,
-    description: item.description || '', // ✅
-  }
+  form.value = { id: item.id, numero_id: item.numero_id, acheminement: item.acheminement, description: item.description || '' }
 }
 
 const destroy = (id) => {
-  if (confirm('Are you sure you want to delete this acheminement?')) {
+  if (confirm('Are you sure you want to delete this acheminement?'))
     router.delete(`/manageAcheminement/${id}`, { preserveScroll: true })
-  }
 }
 
-const reset = () => {
-  form.value = {
-    id: null,
-    numero_id: '',
-    acheminement: '',
-    description: '', // ✅
-  }
-}
+const reset = () => form.value = { id: null, numero_id: '', acheminement: '', description: '' }
 </script>
