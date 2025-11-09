@@ -63,15 +63,30 @@ export default {
 
       <!-- Navigation -->
       <nav class="mt-6 flex flex-wrap justify-center gap-2 sm:gap-4 text-sm font-medium">
-        <Link
-          v-if="auth.user && auth.user.role === 'admin'"
-          :href="route('acheminements.index')"
-          :class="linkClass('acheminements.index')"
-        >
-          Repatuteur SWD
-        </Link>
+  <Link
+    v-if="auth.user?.role === 'admin'"
+    :href="route('acheminements.swd')"
+    :class="linkClass('acheminements.swd')"
+  >
+    Répartiteur SWD
+  </Link>
+  <Link
+    v-if="auth.user?.role === 'admin'"
+    :href="route('acheminements.adm')"
+    :class="linkClass('acheminements.adm')"
+  >
+    Répartiteur ADM
+  </Link>
 
-      </nav>
+  <Link
+    v-if="auth.user?.role === 'admin'"
+    :href="route('acheminements.divers')"
+    :class="linkClass('acheminements.divers')"
+  >
+    Répartiteur DIVERS
+  </Link>
+</nav>
+
       <!-- Remove Filtrage Modal -->
     </header>
 

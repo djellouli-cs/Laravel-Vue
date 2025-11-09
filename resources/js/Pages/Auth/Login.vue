@@ -1,67 +1,106 @@
 <script setup>
 import Layout from '@/Layouts/LayoutLogin.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
-import Textinput from '../Components/Textinput.vue';
+import { ref } from 'vue';
 
 defineOptions({ layout: Layout });
 
 const form = useForm({
   email: null,
   password: null,
-  remember:null
+  remember: null
 });
 
+const isLoading = ref(false);
+const showPassword = ref(false);
+
 const submit = () => {
-  form.post(route('login'),{
-    onError:()=>form.reset("password"),
+  isLoading.value = true;
+
+  form.post(route('login'), {
+    onError: () => {
+      form.reset("password");
+      isLoading.value = false;
+    },
+    onFinish: () => {
+      isLoading.value = false;
+    }
   });
 };
 </script>
 
 <template>
-  <Head title="Login" />
-  
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-6 mb-2">
-    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
-      <h1 class="text-2xl font-semibold text-center text-gray-700 mb-6">Login Account</h1>
-      
-      <form @submit.prevent="submit">
-        <!-- Email -->
+  <Head title="Connexion" />
 
-        <Textinput name="email" type="email" v-model="form.email" :message="form.errors.email"/>
+  <transition appear enter-active-class="transition-opacity duration-700" enter-from-class="opacity-0" enter-to-class="opacity-100">
 
+    <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center py-12 px-6">
+      <div class="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 transition-all hover:scale-[1.02]">
 
-        <!-- Password -->
-        <Textinput name="password" type="password" v-model="form.password" :message="form.errors.password" />
-<div class=" flex items-center justify-between">
-    <div class=" flex items-center gap-2">
-        <label for="remember">Remember me</label>
-    <input type="checkbox" v-model="form.remember" id="remember">
-    </div>
+        <h1 class="text-2xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6">🔐 Connexion au compte</h1>
 
-</div>
+        <form @submit.prevent="submit" class="space-y-4">
 
-        
+          <!-- Email -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+            <input
+              type="email"
+              v-model="form.email"
+              class="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-               <!-- Submit Button -->
-        <div class="mt-6">
-          <button type="submit" class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            Login
+          <!-- Password -->
+          <div class="relative">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mot de passe</label>
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              v-model="form.password"
+              class="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+            />
+
+            <!-- Eye toggle -->
+            <button
+              type="button"
+              @click="showPassword = !showPassword"
+              class="absolute right-3 top-9 text-gray-500 hover:text-blue-500"
+            >
+              {{ showPassword ? "🙈" : "👁️" }}
+            </button>
+          </div>
+
+          <!-- Remember me -->
+          <div class="flex items-center gap-2">
+            <input type="checkbox" v-model="form.remember" class="h-4 w-4">
+            <label class="text-sm text-gray-600 dark:text-gray-300">Se souvenir de moi</label>
+          </div>
+
+          <!-- Submit Button with Loader -->
+          <button
+            type="submit"
+            :disabled="isLoading"
+            class="w-full flex justify-center items-center gap-2 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <!-- Loader -->
+            <span v-if="isLoading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+
+            <!-- Text -->
+            {{ isLoading ? "Connexion..." : "Se connecter" }}
           </button>
-        </div>
-        <Link 
-          :href="route('register')" 
-          class="underline decoration-yellow-800 rounded-full p-1"
-          active-class="bg-green-500 text-red-200"
-        >
-          Register
-        </Link>
-        <!-- Login Link -->
-        <div class="mt-4 text-center text-sm text-gray-600">
-        </div>
-      </form>
+
+          <!-- Register Link -->
+          <div class="text-center">
+            <Link :href="route('register')" class="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
+              Créer un nouveau compte
+            </Link>
+          </div>
+
+        </form>
+      </div>
     </div>
-  </div>
+
+  </transition>
 </template>

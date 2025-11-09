@@ -10,38 +10,43 @@ use Inertia\Inertia;
 
 class AcheminementController extends Controller
 {
-    // 🟢 SWD View
-   public function swd()
-{
-    $acheminements = Acheminement::with([
-        'numero',
-        'numero.organisme',
-        'numero.destination',
-        'numero.fax',
-        'numero.technologie',
-    ])->get();
-
-    $technologies = Technologie::all(['id', 'name']); // send list to Vue
-
-    return Inertia::render('Autocom/SWD', [
-        'acheminements' => $acheminements,
-        'technologies' => $technologies
-    ]);
-}
-
-
-    // 🟢 API index
-    public function index()
+    // 🔹 Shared method for SWD / DIVERS pages /ADM
+    private function renderView(string $view)
     {
         $acheminements = Acheminement::with([
             'numero',
             'numero.organisme',
             'numero.destination',
+            'numero.fax',
+            'numero.technologie',
         ])->get();
 
-        return response()->json($acheminements);
+        $technologies = Technologie::all(['id', 'name']);
+
+        return Inertia::render($view, [
+            'acheminements' => $acheminements,
+            'technologies' => $technologies
+        ]);
     }
 
+    // 🟢 SWD View
+    public function swd()
+    {
+        return $this->renderView('Autocom/SWD');
+    }
+
+    // 🟡 DIVERS View
+    public function divers()
+    {
+        return $this->renderView('Autocom/DIVERS');
+    }
+// 🟡 ADM View
+    public function adm()
+    {
+        return $this->renderView('Autocom/ADM');
+    }
+
+    
     // 🟢 Manager page
     public function manageAcheminement()
     {
@@ -54,30 +59,32 @@ class AcheminementController extends Controller
     // 🟢 Store a new acheminement
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'numero_id' => 'required|exists:numeros,id',
             'acheminement' => 'required|string|max:255',
-            'description' => 'nullable|string|max:255', // ✅ Added description
+            'description' => 'nullable|string|max:255',
         ]);
 
-        Acheminement::create($request->all());
+        Acheminement::create($data);
 
-        return redirect()->route('acheminement.manage')->with('success', 'Acheminement created.');
+        return redirect()->route('acheminement.manage')
+            ->with('success', 'Acheminement created.');
     }
 
     // 🟢 Update an existing acheminement
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $data = $request->validate([
             'numero_id' => 'required|exists:numeros,id',
             'acheminement' => 'required|string|max:255',
-            'description' => 'nullable|string|max:255', // ✅ Added description
+            'description' => 'nullable|string|max:255',
         ]);
 
         $acheminement = Acheminement::findOrFail($id);
-        $acheminement->update($request->all());
+        $acheminement->update($data);
 
-        return redirect()->route('acheminement.manage')->with('success', 'Acheminement updated.');
+        return redirect()->route('acheminement.manage')
+            ->with('success', 'Acheminement updated.');
     }
 
     // 🟢 Delete an acheminement
@@ -86,6 +93,7 @@ class AcheminementController extends Controller
         $acheminement = Acheminement::findOrFail($id);
         $acheminement->delete();
 
-        return redirect()->route('acheminement.manage')->with('success', 'Acheminement deleted.');
+        return redirect()->route('acheminement.manage')
+            ->with('success', 'Acheminement deleted.');
     }
 }

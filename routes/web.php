@@ -37,17 +37,24 @@ use App\Http\Controllers\StandardController;
 // ========================
 // Protected routes
 // ========================
+Route::middleware(['auth'])->group(function () {
+    Route::get('/permanences/this-week', [PermanenceController::class, 'thisWeek'])
+        ->name('permanences.this-week');
+});
+
 Route::middleware(['auth', 'approvedOnly'])->group(function () {
 
     // ========================
     // Annuaire & Related Routes
     // ========================
 
-    Route::get('/acheminements', [AcheminementController::class, 'swd'])->name('acheminements.index');
+// Inertia pages
+Route::get('/acheminements/swd', [AcheminementController::class, 'swd'])->name('acheminements.swd');
+Route::get('/acheminements/divers', [AcheminementController::class, 'divers'])->name('acheminements.divers');
+Route::get('/acheminements/adm', [AcheminementController::class, 'adm'])->name('acheminements.adm');
 
     // Permanences
     Route::get('/permanences', [PermanenceController::class, 'index'])->name('permanences.index');
-    Route::get('/permanences/this-week', [PermanenceController::class, 'thisWeek'])->name('permanences.this-week');
     Route::get('/permanences/create', [PermanenceController::class, 'create'])->name('permanences.create');
     Route::post('/permanences', [PermanenceController::class, 'store'])->name('permanences.store');
     Route::delete('/permanences/delete-precedant', [PermanenceController::class, 'deletePrecedant'])->name('permanences.delete-precedant');
@@ -220,6 +227,7 @@ Route::prefix('adsl')->group(function () {
 
 //users mangement
 Route::middleware(['auth', 'verified'])->group(function () {
+    
     Route::delete('/users/{user}', [UserController::class, 'destroy'])
         ->name('users.destroy');
 
@@ -263,9 +271,7 @@ Route::delete('/manageStandard/{id}', [App\Http\Controllers\StandardController::
 Route::post('/numeros/update-ndappel', [StandardController::class, 'updateNDappel']);
 
 });
-//change password 
-Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+
 // profile
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile.show');

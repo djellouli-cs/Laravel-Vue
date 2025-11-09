@@ -117,8 +117,8 @@ onMounted(async () => {
         </Link>
         <Link
           v-if="auth.user && auth.user.role === 'admin'"
-          :href="route('acheminements.index')"
-          :class="[linkClass('acheminements.index'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded transition-all duration-200']"
+          :href="route('acheminements.swd')"
+          :class="[linkClass('acheminements.swd'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded transition-all duration-200']"
         >
           Autocom
         </Link>
