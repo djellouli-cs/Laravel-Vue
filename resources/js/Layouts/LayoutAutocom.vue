@@ -85,6 +85,20 @@ export default {
   >
     Répartiteur DIVERS
   </Link>
+  <Link
+    v-if="auth.user?.role === 'admin'"
+    :href="route('ptt.1er112')"
+    :class="linkClass('ptt.1er112')"
+  >
+    Répartiteur PTT (1<sup>er</sup> 112)
+  </Link>
+  <Link
+    v-if="auth.user?.role === 'admin'"
+    :href="route('ptt.2er112')"
+    :class="linkClass('ptt.2er112')"
+  >
+    Répartiteur PTT (2<sup>eme</sup> 112)
+  </Link>
 </nav>
 
       <!-- Remove Filtrage Modal -->

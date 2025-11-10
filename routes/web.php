@@ -48,7 +48,14 @@ Route::middleware(['auth', 'approvedOnly'])->group(function () {
     // Annuaire & Related Routes
     // ========================
 
-// Inertia pages
+// Inertia pages..
+
+// Route for PTT 1er 112
+Route::get('/ptt-1-112', [NumeroController::class, 'ptt1er112'])->name('ptt.1er112');
+
+// Route for PTT 2ème 112
+Route::get('/ptt-2-112', [AcheminementController::class, 'ptt2er112'])->name('ptt.2er112');
+
 Route::get('/acheminements/swd', [AcheminementController::class, 'swd'])->name('acheminements.swd');
 Route::get('/acheminements/divers', [AcheminementController::class, 'divers'])->name('acheminements.divers');
 Route::get('/acheminements/adm', [AcheminementController::class, 'adm'])->name('acheminements.adm');

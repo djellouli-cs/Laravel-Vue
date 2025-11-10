@@ -19,6 +19,39 @@ use Inertia\Inertia;
 
 class NumeroController extends Controller
 {
+    public function ptt1er112()
+{
+    $numeros = Numero::with([
+        'destination',
+        'classe',
+        'type',
+        'reserve',
+        'technologie',
+        'facture',
+        'matricule',
+        'organisme',
+        'service',
+        'acheminements',
+        'fax',
+        'user'
+    ])->get();
+
+    return Inertia::render('Autocom/PTT-1-112', [
+        'numeros' => $numeros,
+        'destinations' => Destination::all(),
+        'classes' => Classe::all(),
+        'types' => Type::all(),
+        'reserves' => Reserve::all(),
+        'technologies' => Technologie::all(),
+        'factures' => Facture::all(),
+        'matricules' => Matricule::all(),
+        'organismes' => Organisme::all(),
+        'services' => Service::all(),
+        'acheminements' => Acheminement::all(),
+    ]);
+}
+
+    
     /**
      * Affiche la page de gestion des numéros (CRUD Vue.js via Inertia).
      */

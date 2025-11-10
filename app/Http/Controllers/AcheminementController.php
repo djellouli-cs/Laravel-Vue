@@ -45,7 +45,11 @@ class AcheminementController extends Controller
     {
         return $this->renderView('Autocom/ADM');
     }
-
+//🟡 PTT-2-112 View
+    public function ptt2er112()
+    {
+        return $this->renderView('Autocom/PTT-2-112');
+    }
     
     // 🟢 Manager page
     public function manageAcheminement()
