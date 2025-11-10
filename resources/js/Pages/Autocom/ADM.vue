@@ -2,8 +2,17 @@
   <div class="p-6 min-h-screen bg-gradient-to-br from-blue-50 to-white">
     <h1 class="text-3xl font-extrabold mb-6 text-blue-800">REPARTITEUR ADM</h1>
 
-    <!-- Filters: ADM first, then Technologie -->
+    <!-- Filters: NDappel input, ADM, Technologie -->
     <div class="flex gap-4 mb-6 flex-wrap">
+      <!-- NDappel Input -->
+      <input
+        v-model="searchNDappel"
+        @input="goToNDappelReglette"
+        type="text"
+        placeholder="Enter NDappel..."
+        class="px-4 py-2 border rounded-lg text-lg"
+      />
+
       <!-- ADM Filter -->
       <select v-model="searchNumber" @change="loadADMData" class="px-4 py-2 border rounded-lg text-lg">
         <option value="" disabled selected>REGLETTE ADM</option>
@@ -21,7 +30,6 @@
       </select>
     </div>
 
-    <!-- Loading -->
     <div v-if="loading" class="text-center py-4 text-blue-700 font-semibold">Loading...</div>
 
     <div v-else>
@@ -32,7 +40,7 @@
           </tr>
         </thead>
         <tbody>
-          <!-- First Row: main NDappel in selected ADM -->
+          <!-- First Row: main NDappel -->
           <tr>
             <td v-for="num in 10" :key="'row1-' + num" class="slot">
               <div v-if="getAcheminementsByColumn(num).length">
@@ -41,7 +49,7 @@
                   @mouseleave="hideTooltip"
                   @dblclick="goToAnnuaire(getAcheminementsByColumn(num)[0].numero.NDappel)"
                   :class="{ 'highlight-tech': isTechnologieHighlighted(getAcheminementsByColumn(num)[0]) }"
-                  class="jack-number"
+                  class="jack-number main"
                 >
                   {{ getAcheminementsByColumn(num)[0].numero.NDappel }}
                 </span>
@@ -52,7 +60,7 @@
             </td>
           </tr>
 
-          <!-- Second Row: all other acheminements for same NDappel (any ADM) -->
+          <!-- Second Row: other acheminements for same NDappel -->
           <tr>
             <td v-for="num in 10" :key="'row2-' + num" class="slot">
               <div v-for="(extra, index) in getOtherAcheminements(num)" :key="index">
@@ -69,7 +77,7 @@
             </td>
           </tr>
 
-          <!-- Third Row: other NDappel in the same ADM -->
+          <!-- Third Row: other NDappel in same ADM -->
           <tr>
             <td v-for="num in 10" :key="'row3-' + num" class="slot">
               <div v-for="(extra, index) in getAcheminementsByColumn(num).slice(1)" :key="index">
@@ -89,7 +97,6 @@
       </table>
     </div>
 
-    <!-- Custom Tooltip -->
     <div
       v-if="tooltip.visible"
       class="custom-tooltip"
@@ -107,15 +114,13 @@ import { route } from "ziggy-js";
 
 export default {
   layout: Layout,
-  props: {
-    acheminements: Array,
-    technologies: Array
-  },
+  props: { acheminements: Array, technologies: Array },
   data() {
     return {
       loading: false,
       searchNumber: "",
       selectedTechnologie: "",
+      searchNDappel: "", // NDappel input
       filteredAcheminements: [],
       tooltip: { visible: false, text: "", x: 0, y: 0 }
     };
@@ -131,26 +136,22 @@ export default {
         const match = a.acheminement.match(/ADM\s+(\d+)/);
         if (match) ADMNumbers.add(parseInt(match[1]));
       });
-      return Array.from(ADMNumbers).sort((a, b) => a - b);
+      return Array.from(ADMNumbers).sort((a,b)=>a-b);
     }
   },
   methods: {
-    onTechnologieChange() {
-      this.loadADMData(); // keep selected ADM
-    },
+    onTechnologieChange() { this.loadADMData(); },
+
     loadADMData() {
       this.loading = true;
       setTimeout(() => {
         let results = this.acheminements;
-
         if (this.searchNumber && !isNaN(this.searchNumber)) {
           results = results.filter(a => a.acheminement.includes(`ADM ${this.searchNumber}`));
         }
-
         if (this.selectedTechnologie) {
           results = results.filter(a => a.numero?.technologie?.id == this.selectedTechnologie);
         }
-
         this.filteredAcheminements = results;
         this.loading = false;
       }, 100);
@@ -162,7 +163,6 @@ export default {
       );
     },
 
-    // new: get all other acheminements for same NDappel, any ADM
     getOtherAcheminements(column) {
       const first = this.getAcheminementsByColumn(column)[0];
       if (!first) return [];
@@ -173,56 +173,58 @@ export default {
       );
     },
 
-    getDestination(acheminement) {
-      if (!acheminement) return "<div>No Destination</div>";
+    getDestination(a) {
+      if (!a) return "<div>No Destination</div>";
       const html = [];
-      if (acheminement.numero?.fax) html.push(`<div>📠 FAX</div>`);
-      if (acheminement.numero?.Position) html.push(`<div>📍 ${acheminement.numero.Position}</div>`);
-      if (acheminement.numero?.destination) {
-        html.push(`<div>🏛 <strong style="font-size:18px;">${acheminement.numero.destination.name}</strong><br><span style="font-size:14px; color:#ccc;">${acheminement.numero.destination.name_fr}</span></div>`);
-      }
-      if (acheminement.numero?.organisme) {
-        html.push(`<div>🏢 <strong style="font-size:18px;">${acheminement.numero.organisme.name}</strong><br><span style="font-size:14px; color:#ccc;">${acheminement.numero.organisme.name_fr}</span></div>`);
-      }
-      if (acheminement.updated_at) html.push(`<div>🗓 ${acheminement.updated_at.slice(0,10)}</div>`);
-      if (acheminement.description) html.push(`<div>ℹ️ ${acheminement.description}</div>`);
-      if (acheminement.acheminement) html.push(`<div>🔌 ${acheminement.acheminement}</div>`);
+      if (a.numero?.Position) html.push(`<div>📍 ${a.numero.Position}</div>`);
+      if (a.numero?.destination) html.push(`<div>🏛 ${a.numero.destination.name}</div>`);
+      if (a.numero?.organisme) html.push(`<div>🏢 ${a.numero.organisme.name}</div>`);
+      if (a.description) html.push(`<div>ℹ️ ${a.description}</div>`);
       return html.join("");
     },
 
-    isTechnologieHighlighted(acheminement) {
-      return this.selectedTechnologie && acheminement.numero?.technologie?.id == this.selectedTechnologie;
+    isTechnologieHighlighted(a) {
+      return this.selectedTechnologie && a.numero?.technologie?.id == this.selectedTechnologie;
     },
 
-    showTooltip(event, text) {
-      this.tooltip.text = text;
-      this.tooltip.x = event.pageX + 15;
-      this.tooltip.y = event.pageY + 15;
-      this.tooltip.visible = true;
+    showTooltip(e,text) {
+      this.tooltip = { visible:true, text, x:e.pageX+15, y:e.pageY+15 };
     },
+
     hideTooltip() { this.tooltip.visible = false; },
+
     goToAnnuaire(ndappel) {
-      if (!ndappel) return;
-      router.visit(route('Annuaire.index', { ndappel }));
+      if(ndappel) router.visit(route('Annuaire.index',{ndappel}));
+    },
+
+    // Navigate to ADM reglette based on NDappel
+    goToNDappelReglette() {
+      if (!this.searchNDappel) return;
+
+      const match = this.acheminements.find(a => a.numero?.NDappel == this.searchNDappel);
+      if (match) {
+        const numMatch = match.acheminement.match(/ADM\s+(\d+)/);
+        if (numMatch) {
+          this.searchNumber = parseInt(numMatch[1]);
+          this.loadADMData();
+        }
+      }
     }
   },
-  created() {
-    this.loadADMData();
-  }
+  created() { this.loadADMData(); }
 };
 </script>
 
 <style scoped>
-/* Keep your panel look */
-.select-field { margin-bottom: 20px; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
 .reglette { border-collapse: separate; border-spacing: 4px; background: #333; padding: 8px; border-radius: 8px; box-shadow: inset 0 0 8px rgba(0,0,0,0.8); }
-.reglette th { background: #222; color: #fff; padding: 6px; font-weight: bold; text-align: center; border-radius: 4px; }
-.slot { background: linear-gradient(145deg, #555, #444); border-radius: 6px; padding: 4px; height: 60px; vertical-align: middle; box-shadow: inset 0 -2px 3px rgba(0,0,0,0.5), inset 0 2px 3px rgba(255,255,255,0.1); }
-.jack-number { display: inline-block; background: radial-gradient(circle at 30% 30%, #ffcc00, #cc9900); padding: 4px 6px; border-radius: 4px; font-weight: bold; color: #000; box-shadow: inset 0 -1px 2px rgba(0,0,0,0.4); cursor: pointer; }
-.jack-number.secondary { background: radial-gradient(circle at 30% 30%, #00bfff, #0077aa); color: white; }
-.jack-number:hover { background: radial-gradient(circle at 30% 30%, #ffdd33, #cc9900); }
-.desc { display: block; font-size: 12px; color: #ccc; margin-top: 4px; }
+.reglette th { background: #222; color:#fff; padding:6px; font-weight:bold; text-align:center; border-radius:4px; }
+.slot { background: linear-gradient(145deg,#555,#444); border-radius:6px; padding:4px; height:60px; vertical-align:middle; box-shadow: inset 0 -2px 3px rgba(0,0,0,0.5), inset 0 2px 3px rgba(255,255,255,0.1); transition: transform 0.2s; }
+.slot:hover { transform: scale(1.03); }
+.jack-number { display:inline-block; background: radial-gradient(circle at 30% 30%, #ffcc00, #cc9900); padding:4px 6px; border-radius:4px; font-weight:bold; color:#000; box-shadow: inset 0 -1px 2px rgba(0,0,0,0.4); cursor:pointer; transition: transform 0.2s, background 0.2s; }
+.jack-number.main:hover { transform: scale(1.1); background: radial-gradient(circle at 30% 30%, #ffdd33,#cc9900); }
+.jack-number.secondary { background: radial-gradient(circle at 30%30%, #00bfff,#0077aa); color:white; }
+.desc { display:block; font-size:12px; color:#ccc; margin-top:4px; }
 .highlight-tech { outline: 2px solid #ff5733; }
-.text-orange-700 { color: #c05621; }
-.custom-tooltip { position: absolute; background-color: rgba(0,0,0,0.95); color: white; padding: 12px 16px; border-radius: 6px; font-size: 16px; max-width: 400px; z-index: 9999; pointer-events: none; }
+.text-orange-700 { color:#c05621; }
+.custom-tooltip { position:absolute; background-color: rgba(0,0,0,0.95); color:white; padding:12px 16px; border-radius:6px; font-size:16px; max-width:400px; z-index:9999; pointer-events:none; }
 </style>

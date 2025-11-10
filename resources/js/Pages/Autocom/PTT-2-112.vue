@@ -4,15 +4,27 @@
       REPARTITEUR PTT (2eme 112)
     </h1>
 
-    <!-- ✅ SELECT REGLETTE -->
-    <div class="mb-6">
-      <label class="font-bold mr-2">Choose Reglette:</label>
-      <select v-model="selectedReglette" class="border px-3 py-2 rounded">
-        <option value="">-- Select Reglette --</option>
-        <option v-for="r in regletteNumbers" :key="r" :value="r">
-          Reglette {{ r }}
-        </option>
-      </select>
+    <!-- NDappel input + SELECT REGLETTE -->
+    <div class="mb-6 flex gap-4 flex-wrap">
+      <!-- NDappel Input -->
+      <input
+        v-model="searchNDappel"
+        @input="goToNDappelReglette"
+        type="text"
+        placeholder="Enter NDappel..."
+        class="px-4 py-2 border rounded-lg"
+      />
+
+      <!-- Reglette Select -->
+      <div>
+        <label class="font-bold mr-2">Choose Reglette:</label>
+        <select v-model="selectedReglette" class="border px-3 py-2 rounded">
+          <option value="">-- Select Reglette --</option>
+          <option v-for="r in regletteNumbers" :key="r" :value="r">
+            Reglette {{ r }}
+          </option>
+        </select>
+      </div>
     </div>
 
     <div v-if="loading" class="text-center py-6 text-blue-700 font-semibold text-xl">
@@ -20,14 +32,13 @@
     </div>
 
     <div v-else>
-
-      <!-- ✅ SHOW ONLY SELECTED REGLETTE -->
+      <!-- SHOW ONLY SELECTED REGLETTE -->
       <div v-if="selectedReglette && reglettesMap[selectedReglette]">
         <h2 class="text-xl font-bold mb-2 text-blue-700">
           Reglette {{ selectedReglette }}
         </h2>
 
-        <table class="reglette">
+        <table class="reglette w-full shadow-lg">
           <thead>
             <tr>
               <th v-for="n in 10" :key="n">{{ n }}</th>
@@ -43,7 +54,7 @@
                     @dblclick="goToAnnuaire(reglettesMap[selectedReglette][pos].numero?.NDappel)"
                     class="jack-number"
                   >
-                    {{ reglettesMap[selectedReglette][pos].acheminement }}
+                    {{ reglettesMap[selectedReglette][pos].numero?.NDappel || reglettesMap[selectedReglette][pos].acheminement }}
                   </span>
                 </div>
               </td>
@@ -51,7 +62,6 @@
           </tbody>
         </table>
       </div>
-
     </div>
 
     <!-- Tooltip -->
@@ -71,13 +81,12 @@ import { route } from "ziggy-js";
 
 export default {
   layout: Layout,
-  props: {
-    acheminements: Array,
-  },
+  props: { acheminements: Array },
   data() {
     return {
       loading: true,
       selectedReglette: "",
+      searchNDappel: "",
       tooltip: { visible: false, text: "", x: 0, y: 0 },
     };
   },
@@ -85,26 +94,20 @@ export default {
   computed: {
     reglettesMap() {
       const map = {};
-
       this.acheminements
         .filter(a => a.acheminement.startsWith("PTT (2eme 112)"))
         .forEach(a => {
           const num = parseInt(a.acheminement.replace("PTT (2eme 112) ", ""));
-
           const reglette = Math.ceil(num / 10);
           const position = num % 10 === 0 ? 10 : num % 10;
-
           if (!map[reglette]) map[reglette] = {};
           map[reglette][position] = a;
         });
-
       return map;
     },
-
-    // ✅ list of available reglettes for select
     regletteNumbers() {
       return Object.keys(this.reglettesMap).map(Number).sort((a, b) => a - b);
-    }
+    },
   },
 
   methods: {
@@ -127,13 +130,21 @@ export default {
       if (!ndappel) return;
       router.visit(route("Annuaire.index", { ndappel }));
     },
+    goToNDappelReglette() {
+      if (!this.searchNDappel) return;
+      const match = this.acheminements.find(
+        a => a.numero?.NDappel === this.searchNDappel && a.acheminement.startsWith("PTT (2eme 112)")
+      );
+      if (match) {
+        const num = parseInt(match.acheminement.replace("PTT (2eme 112) ", ""));
+        this.selectedReglette = Math.ceil(num / 10);
+      }
+    },
   },
 
   mounted() {
-    setTimeout(() => {
-      this.loading = false;
-    }, 300);
-  }
+    setTimeout(() => (this.loading = false), 300);
+  },
 };
 </script>
 
@@ -156,6 +167,10 @@ export default {
   border-radius: 6px;
   height: 50px;
   text-align: center;
+  transition: transform 0.2s;
+}
+.slot:hover {
+  transform: scale(1.05);
 }
 .jack-number {
   background: #ffcc00;
@@ -163,6 +178,11 @@ export default {
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
+  transition: background 0.2s, transform 0.2s;
+}
+.jack-number:hover {
+  background: #ffc700;
+  transform: scale(1.1);
 }
 .custom-tooltip {
   position: absolute;
@@ -171,5 +191,6 @@ export default {
   padding: 10px;
   border-radius: 6px;
   z-index: 999;
+  pointer-events: none;
 }
 </style>
