@@ -47,6 +47,16 @@
       </div>
     </form>
 
+    <!-- 🔍 Barre de recherche -->
+    <div class="mb-4">
+      <input
+        v-model="search"
+        type="text"
+        class="border rounded px-3 py-2 w-full sm:w-1/2"
+        placeholder="🔍 Rechercher un service..."
+      />
+    </div>
+
     <!-- Table + Pagination -->
     <div class="border rounded overflow-x-auto w-full">
       <!-- Tableau -->
@@ -73,7 +83,7 @@
               <button @click="destroy(service.id)" class="text-red-600 hover:underline">Supprimer</button>
             </td>
           </tr>
-          <tr v-if="services.length === 0">
+          <tr v-if="filteredServices.length === 0">
             <td colspan="4" class="text-center text-gray-500 py-3">Aucun service trouvé.</td>
           </tr>
         </tbody>
@@ -129,7 +139,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import Layout from '@/Layouts/LayoutEdit.vue'
 
@@ -147,16 +157,34 @@ const form = ref({
   name_fr: '',
 })
 
-// Pagination logique
+// 🔍 Recherche
+const search = ref('')
+
+// Filtrer les services selon la recherche
+const filteredServices = computed(() => {
+  const q = search.value.toLowerCase()
+  return props.services.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    (s.name_fr && s.name_fr.toLowerCase().includes(q))
+  )
+})
+
+// Pagination
 const itemsPerPage = 5
 const currentPage = ref(1)
+
 const totalPages = computed(() =>
-  Math.max(1, Math.ceil(props.services.length / itemsPerPage))
+  Math.max(1, Math.ceil(filteredServices.value.length / itemsPerPage))
 )
 
 const paginatedServices = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
-  return props.services.slice(start, start + itemsPerPage)
+  return filteredServices.value.slice(start, start + itemsPerPage)
+})
+
+// Reset page quand on recherche
+watch(search, () => {
+  currentPage.value = 1
 })
 
 function goToPage(page) {

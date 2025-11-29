@@ -14,9 +14,13 @@
         <input
           v-model="form.facture"
           type="text"
-          placeholder="Laisser vide pour auto-générer"
+          placeholder=""
           class="border rounded px-3 py-2 w-full"
+          list="lsu"
         />
+        <datalist id="lsu">
+        <option value="LSU"></option>
+        </datalist>
       </div>
 
       <div>
@@ -75,7 +79,7 @@
         <textarea
           v-model="form.notes"
           rows="3"
-          placeholder="Notes supplémentaires..."
+          placeholder="Notes ....."
           class="border rounded px-3 py-2 w-full"
         ></textarea>
       </div>

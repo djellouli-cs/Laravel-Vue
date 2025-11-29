@@ -351,7 +351,10 @@ function calcPosition() {
   if (!form.Position) {
     return ''
   }
-  
+  // Position = EXTERNE → always BRAVO
+if (form.Position === 'EXTERNE') {
+  return "Bravo  😁 ";
+}
   // PTT format validation
   if (form.Position.substr(0, 6) === "PTT (1") {
     var d = form.Position.length - 1;

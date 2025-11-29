@@ -12,7 +12,7 @@
             {{ org.name }}
           </option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click pour sélectionner plusieurs)</small>
       </div>
 
       <!-- Destination -->
@@ -24,7 +24,7 @@
             {{ dest.name }}
           </option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click pour sélectionner plusieurs)</small>
       </div>
 
       <!-- Service -->
@@ -36,7 +36,7 @@
             {{ srv.name }}
           </option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click pour sélectionner plusieurs)</small>
       </div>
 
       <!-- Technologie -->
@@ -48,7 +48,7 @@
             {{ tech.name }}
           </option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click pour sélectionner plusieurs)</small>
       </div>
 
       <!-- Groupe -->
@@ -60,7 +60,7 @@
             {{ groupe.groupes }}
           </option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click pour sélectionner plusieurs)</small>
       </div>
     </div>
 

@@ -10,7 +10,7 @@
                 class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="org in organismes" :key="org.id" :value="org.id">{{ org.name }}</option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click Click pour sélectionner plusieurs)</small>
       </div>
 
       <!-- Destination -->
@@ -20,7 +20,7 @@
                 class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="dest in destinations" :key="dest.id" :value="dest.id">{{ dest.name }}</option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click  pour sélectionner plusieurs)</small>
       </div>
 
       <!-- Service -->
@@ -30,7 +30,7 @@
                 class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="srv in services" :key="srv.id" :value="srv.id">{{ srv.name }}</option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click ou pour sélectionner plusieurs)</small>
       </div>
 
       <!-- Technologie -->
@@ -40,7 +40,7 @@
                 class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="tech in technologies" :key="tech.id" :value="tech.id">{{ tech.name }}</option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click pour sélectionner plusieurs)</small>
       </div>
 
       <!-- Groupe -->
@@ -50,7 +50,7 @@
                 class="w-full border rounded-lg px-3 py-2 h-32 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="groupe in groupes" :key="groupe.id" :value="groupe.id">{{ groupe.groupes }}</option>
         </select>
-        <small class="text-gray-500">(Ctrl+Click ou Cmd+Click pour sélectionner plusieurs)</small>
+        <small class="text-gray-500">(Ctrl+Click pour sélectionner plusieurs)</small>
       </div>
     </div>
 
