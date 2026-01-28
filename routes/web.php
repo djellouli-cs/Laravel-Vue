@@ -281,9 +281,21 @@ Route::post('/numeros/update-ndappel', [StandardController::class, 'updateNDappe
 
 // profile
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile.show');
-    Route::put('/profile/change-password', [AuthController::class, 'changePassword'])->name('profile.password.update');
+    Route::get('/profile', [AuthController::class, 'showProfile'])
+        ->name('profile.show');
+
+    Route::put('/profile/change-password', [AuthController::class, 'changePassword'])
+        ->name('profile.password.update');
+
+    // ✅ ADD THIS
+    Route::post('/profile/change-avatar', [AuthController::class, 'changeAvatar'])
+        ->name('profile.avatar.update');
+    Route::put('/profile/change-email', [AuthController::class, 'changeEmail'])
+    ->name('profile.email.update');
+    
+
 });
+
 
 
 
