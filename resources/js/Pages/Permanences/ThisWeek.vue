@@ -1,6 +1,7 @@
 <script setup>
 import Layout from '@/Layouts/LayoutAnnuaire.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import { watch } from 'vue'; // ✅ Import watch here
 
 defineOptions({ layout: Layout });
 
@@ -26,6 +27,19 @@ function getNDappels(psName, mobileOnly = false) {
         .map(n => n.NDappel)
         .filter(Boolean);
 }
+
+// ✅ Watch permanence prop and save to sessionStorage
+watch(
+    () => props.permanence,
+    (val) => {
+        if (val) {
+            sessionStorage.setItem('weekendPermanence', JSON.stringify(val));
+        } else {
+            sessionStorage.removeItem('weekendPermanence'); // optional: clear if null
+        }
+    },
+    { immediate: true }
+);
 </script>
 
 <template>

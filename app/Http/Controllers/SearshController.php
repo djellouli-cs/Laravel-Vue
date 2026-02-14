@@ -1,17 +1,17 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Permanence;
 use App\Models\Destination;
-use App\Models\Groupe;
 use App\Models\Numero;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
-class StandardController extends Controller
+class SearshController extends Controller
 {
     /**
-     * Display all numeros for the standard page.
+     * Display all numeros for the search page.
      */
     public function index()
     {
@@ -37,32 +37,27 @@ class StandardController extends Controller
         ->orderBy('technologie_id')
         ->orderBy('matricule_id')
         ->get();
-///permanence of week 
- $today = now()->format('Y-m-d');
-        \Log::info('Today is: ' . $today);
 
-        // Find permanence for today
+        // Permanence of the week
+        $today = now()->format('Y-m-d');
+
         $thisWeekPermanence = Permanence::where('DSemaine', '<=', $today)
             ->where('FSemaine', '>=', $today)
             ->with('destinations.numeros.organisme')
             ->first();
 
-        \Log::info('Found permanence:', $thisWeekPermanence ? $thisWeekPermanence->toArray() : []);
-
-        // Get all destinations with their numeros for the helper functions (like in index)
+        // Get all destinations with their numeros
         $destinations = Destination::with('numeros.technologie')->get();
 
-        return Inertia::render('Standard/Index', [
+        return Inertia::render('Searsh', [
             'numeros' => $numeros,
             'permanence' => $thisWeekPermanence,
-            
-            'destinations' => $destinations
-
+            'destinations' => $destinations,
         ]);
     }
 
     /**
-     * Show a single numero by NDappel (if you need it).
+     * Show a single numero by NDappel.
      */
     public function show(Request $request)
     {
@@ -86,13 +81,13 @@ class StandardController extends Controller
             ])
             ->firstOrFail();
 
-        return Inertia::render('Standard/Show', [
+        return Inertia::render('Searsh', [
             'numero' => $numero,
         ]);
     }
 
     /**
-     * Update NDappel (only if technologie is MOBILE).
+     * Update NDappel (only if technologie is MOBILE or ALGERIE TELECOM + organisme = الولايات).
      */
     public function updateNDappel(Request $request)
     {
@@ -101,16 +96,17 @@ class StandardController extends Controller
             'NDappel' => 'required|string|max:255',
         ]);
 
-        $numero = Numero::find($validated['id']);
+        $numero = Numero::findOrFail($validated['id']);
 
-        // ✅ Update only if technologie is MOBILE
-        if (strtoupper($numero->technologie->name ?? '') === 'MOBILE') {
+        $techName = strtoupper($numero->technologie->name ?? '');
+        $orgName  = $numero->organisme->name ?? '';
+
+        // ✅ Correct condition
+        if ($techName === 'MOBILE' || ($techName === 'ALGERIE TELECOM' && $orgName === 'الولايات')) {
             $numero->NDappel = $validated['NDappel'];
             $numero->save();
         }
 
         return back();
     }
-    
-
 }

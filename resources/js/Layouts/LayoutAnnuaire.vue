@@ -142,6 +142,13 @@ onMounted(async () => {
             {{ prochainCount > 9 ? '9+' : prochainCount }}
           </span>
         </Link>
+        <Link
+          v-if="auth.user && auth.user.role === 'admin'"
+          :href="route('Searsh.index')"
+          :class="[linkClass('Searsh.index'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded transition-all duration-200']"
+        >
+          searsh
+        </Link>
       </nav>
     </header>
 

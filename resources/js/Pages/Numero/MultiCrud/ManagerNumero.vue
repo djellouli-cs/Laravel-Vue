@@ -167,7 +167,6 @@
           <th class="border px-2 py-1">Service</th>
           <th class="border px-2 py-1">Fax</th>
           <th class="border px-2 py-1">Acheminements</th>
-          <th class="border px-2 py-1">Utilisateur</th>
           <th class="border px-2 py-1">Actions</th>
         </tr>
       </thead>
@@ -197,12 +196,7 @@
             </ul>
             <span v-else>—</span>
           </td>
-          <td class="border px-2 py-1">
-            <span v-if="numero.user" class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-              👤 {{ numero.user.name }}
-            </span>
-            <span v-else class="text-gray-500">—</span>
-          </td>
+          
           <td class="border px-2 py-1 space-x-2">
             <button @click="edit(numero)" class="text-blue-600 hover:underline">Modifier</button>
             <button @click="destroy(numero.id)" class="text-red-600 hover:underline">Supprimer</button>

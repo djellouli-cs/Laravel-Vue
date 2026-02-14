@@ -31,6 +31,8 @@ use App\Models\User;
 use App\Models\Plage;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\StandardController;
+use App\Http\Controllers\SearshController;
+
 
 
 
@@ -278,6 +280,16 @@ Route::delete('/manageStandard/{id}', [App\Http\Controllers\StandardController::
 Route::post('/numeros/update-ndappel', [StandardController::class, 'updateNDappel']);
 
 });
+// Searsh in admin
+Route::middleware(['auth'])->group(function () {
+Route::get('/manageSearsh', [App\Http\Controllers\SearshController::class, 'index'])->name('Searsh.index');
+Route::post('/manageSearsh', [App\Http\Controllers\SearshController::class, 'store'])->name('Searsh.store');
+Route::put('/manageSearsh/{id}', [App\Http\Controllers\SearshController::class, 'update'])->name('Searsh.update');
+Route::delete('/manageSearsh/{id}', [App\Http\Controllers\SearshController::class, 'destroy'])->name('Searsh.destroy');
+Route::post('/numeros/update-ndappel', [SearshController::class, 'updateNDappel']);
+
+});
+
 
 // profile
 Route::middleware('auth')->group(function () {

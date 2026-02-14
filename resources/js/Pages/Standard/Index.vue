@@ -1,11 +1,42 @@
 <template>
+
+
   <div
     ref="containerRef"
     :dir="currentLang === 'ar' ? 'rtl' : 'ltr'"
     class="min-h-screen bg-gradient-to-br from-green-50 to-white py-10"
   >
+  
     <div class="p-8 max-w-5xl mx-auto bg-white rounded-2xl shadow-xl border border-green-100">
-      <!-- 🕒 Header -->
+  <div v-for="destination in destinations" :key="destination.id" class="mb-6">
+  <div v-if="destination.name === permanence.PSemaine">
+    <h2 class="text-lg font-bold text-green-800 mb-2 flex items-center gap-2">
+      🎯 المداوم : {{ destination.name }}
+    </h2>
+
+    <div class="space-y-2">
+      <div
+        v-for="numero in mobileNumeros(destination.numeros)"
+        :key="numero.id"
+        class="flex items-center justify-between bg-green-50 border border-green-100 rounded-xl p-3 shadow-sm hover:bg-green-100 transition"
+      >
+        <div class="flex items-center gap-2">
+          <span class="text-white bg-green-500 w-6 h-6 flex items-center justify-center rounded-full text-sm">📱</span>
+          <span class="font-medium">{{ numero.NDappel }}</span>
+        </div>
+        <span class="text-green-600 font-semibold">3360</span>
+      </div>
+
+      <div
+        v-if="mobileNumeros(destination.numeros).length === 0"
+        class="text-gray-500 italic flex items-center gap-2"
+      >
+        📵 No mobile number found
+      </div>
+    </div>
+  </div>
+</div>
+    <!-- 🕒 Header -->
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-3xl font-extrabold text-green-800 flex items-center gap-2">
           <span>🕒</span>
@@ -188,9 +219,15 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { router } from '@inertiajs/vue3'
 import Layout from '@/Layouts/LayoutStandard.vue'
+import { usePage } from '@inertiajs/vue3'
 
 defineOptions({ layout: Layout })
-
+const page = usePage()
+const permanence = computed(() => page.props.permanence)
+const destinations = computed(() => page.props.destinations)
+const mobileNumeros = (numeros) => {
+  return (numeros || []).filter(n => n.technologie && n.technologie.name === 'MOBILE')
+}
 const props = defineProps({
   numeros: { type: Array, default: () => [] }
 })

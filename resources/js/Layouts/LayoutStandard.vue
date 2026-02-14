@@ -110,7 +110,7 @@ export default {
           Autocom
         </Link>
         <Link
-          v-if="auth.user && auth.user.role === 'standard'"
+          v-if="auth.user && auth.user.role === 'admin'"
           :href="route('permanences.this-week')"
           :class="[
             linkClass('permanences.this-week'), 
