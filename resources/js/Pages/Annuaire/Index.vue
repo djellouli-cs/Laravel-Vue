@@ -12,7 +12,7 @@
           @keydown="handleKeydown"
           @focus="showSuggestions = true"
           type="text"
-          placeholder="Entrez le NDappel (ex : 3360)"
+          placeholder="Entrez le Numéro"
           class="border-2 border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg px-4 py-3 w-full text-lg transition"
         />
       </div>
@@ -50,29 +50,31 @@
               </button>
             </div>
 
-            <h2 class="text-2xl font-bold mb-6 text-blue-700">
-              NDappel : <span class="text-blue-900">{{ searchedNumero.NDappel }}</span>
+            <h2 class="text-2xl font-bold mb-6 text-emerald-600 text-center underline" v-if="searchedNumero.organisme">
+              {{ searchedNumero.destination.name_fr }}
             </h2>
 
             <!-- Détails principaux -->
             <div class="grid grid-cols-2 gap-6 text-base">
-              <div><span class="font-semibold text-blue-700">ID :</span> {{ searchedNumero.id }}</div>
+            <h2 class="text-2xl font-bold mb-6 text-blue-700">
+              Numéro : <span class="text-blue-900">{{ searchedNumero.NDappel }}</span>
+            </h2>
               <div><span class="font-semibold text-blue-700">Position :</span> {{ searchedNumero.Position }}</div>
 
               <div>
-                <span class="font-semibold text-blue-700">Organisme :</span>
+                <span class="font-semibold text-blue-700">Organisme : </span>
                 <span v-if="searchedNumero.organisme">
-                  {{ searchedNumero.organisme.name }}
-                  <span class="text-red-500 italic ml-1">{{ searchedNumero.organisme.name_fr }}</span>
+                  {{ searchedNumero.organisme.name_fr }}
+                  <span class=" text-amber-500 italic ml-1">{{ searchedNumero.organisme.name }}</span>
                 </span>
                 <span v-else>—</span>
               </div>
 
               <div>
-                <span class="font-semibold text-blue-700">Destination :</span>
+                <span class="font-semibold text-blue-700">Destination : </span>
                 <span v-if="searchedNumero.destination">
-                  {{ searchedNumero.destination.name }}
-                  <span class="text-red-500 italic ml-1">{{ searchedNumero.destination.name_fr }}</span>
+                  {{ searchedNumero.destination.name_fr }}
+                  <span class="text-amber-500 italic ml-1">{{ searchedNumero.destination.name }}</span>
                 </span>
                 <span v-else>—</span>
               </div>
@@ -153,10 +155,10 @@
 
               <div><span class="font-semibold text-blue-700">Matricule :</span> {{ searchedNumero.matricule?.matricule || '—' }}</div>
               <div>
-                <span class="font-semibold text-blue-700">Service :</span>
+                <span class="font-semibold text-blue-700">Service : </span>
                 <span v-if="searchedNumero.service">
-                  {{ searchedNumero.service.name }}
-                  <span v-if="searchedNumero.service.name_fr" class="text-red-500 italic ml-1">{{ searchedNumero.service.name_fr }}</span>
+                  {{ searchedNumero.service.name_fr }}
+                  <span v-if="searchedNumero.service.name_fr" class="text-amber-500 italic ml-1">{{ searchedNumero.service.name }}</span>
                 </span>
                 <span v-else>—</span>
               </div>

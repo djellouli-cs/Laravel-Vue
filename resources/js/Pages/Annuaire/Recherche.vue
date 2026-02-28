@@ -138,7 +138,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import Layout from '@/Layouts/LayoutAnnuaire.vue'
+import Layout from '@/Layouts/LayoutRecherche.vue'
 
 defineOptions({ layout: Layout })
 

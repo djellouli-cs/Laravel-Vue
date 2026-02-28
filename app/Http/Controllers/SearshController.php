@@ -30,10 +30,7 @@ class SearshController extends Controller
             'fax',
             'post',
         ])
-        // ✅ Hide numeros with related type.name = 'PRIVEE1'
-        ->whereHas('type', function ($query) {
-            $query->where('name', '!=', 'PRIVEE1');
-        })
+        
         ->orderBy('technologie_id')
         ->orderBy('matricule_id')
         ->get();

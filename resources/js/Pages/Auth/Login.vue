@@ -30,77 +30,114 @@ const submit = () => {
   });
 };
 </script>
-
 <template>
   <Head title="Connexion" />
 
-  <transition appear enter-active-class="transition-opacity duration-700" enter-from-class="opacity-0" enter-to-class="opacity-100">
+  <transition
+    appear
+    enter-active-class="transition ease-out duration-500"
+    enter-from-class="opacity-0 translate-y-4"
+    enter-to-class="opacity-100 translate-y-0"
+  >
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 px-6">
 
-    <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center py-12 px-6">
-      <div class="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 transition-all hover:scale-[1.02]">
+      <div class="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8">
 
-        <h1 class="text-2xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6">🔐 Connexion au compte</h1>
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-1">
+          Connexion
+        </h1>
+        <p class="text-center text-sm text-gray-500 mb-6">
+          Connectez-vous à votre compte
+        </p>
 
-        <form @submit.prevent="submit" class="space-y-4">
+        <form @submit.prevent="submit" class="space-y-5">
 
-          <!-- Email -->
+          <!-- EMAIL -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+
             <input
               type="email"
               v-model="form.email"
-              class="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+              required
+              autofocus
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             />
+
+            <p v-if="form.errors.email" class="mt-1 text-sm text-red-500">
+              {{ form.errors.email }}
+            </p>
           </div>
 
-          <!-- Password -->
+          <!-- PASSWORD -->
           <div class="relative">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mot de passe</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Mot de passe
+            </label>
+
             <input
               :type="showPassword ? 'text' : 'password'"
               v-model="form.password"
-              class="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+              required
+              class="w-full px-4 py-2.5 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             />
 
-            <!-- Eye toggle -->
             <button
               type="button"
               @click="showPassword = !showPassword"
-              class="absolute right-3 top-9 text-gray-500 hover:text-blue-500"
+              class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-blue-600"
             >
               {{ showPassword ? "🙈" : "👁️" }}
             </button>
+
+            <p v-if="form.errors.password" class="mt-1 text-sm text-red-500">
+              {{ form.errors.password }}
+            </p>
           </div>
 
-          <!-- Remember me -->
-          <div class="flex items-center gap-2">
-            <input type="checkbox" v-model="form.remember" class="h-4 w-4">
-            <label class="text-sm text-gray-600 dark:text-gray-300">Se souvenir de moi</label>
+          <!-- REMEMBER -->
+          <div class="flex items-center justify-between text-sm">
+            <label class="flex items-center gap-2">
+              <input
+                type="checkbox"
+                v-model="form.remember"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              Se souvenir de moi
+            </label>
+
+            
           </div>
 
-          <!-- Submit Button with Loader -->
+          <!-- BUTTON -->
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full flex justify-center items-center gap-2 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            class="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-60"
           >
-            <!-- Loader -->
-            <span v-if="isLoading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span
+              v-if="isLoading"
+              class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+            ></span>
 
-            <!-- Text -->
             {{ isLoading ? "Connexion..." : "Se connecter" }}
           </button>
 
-          <!-- Register Link -->
-          <div class="text-center">
-            <Link :href="route('register')" class="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
-              Créer un nouveau compte
+          <!-- REGISTER -->
+          <p class="text-center text-sm text-gray-600">
+            Pas encore inscrit ?
+            <Link
+              :href="route('register')"
+              class="text-blue-600 font-medium hover:underline"
+            >
+              Créer un compte
             </Link>
-          </div>
+          </p>
 
         </form>
       </div>
     </div>
-
   </transition>
 </template>

@@ -191,17 +191,56 @@
               {{ currentLang === 'fr' ? numero.service?.name_fr ?? '—' : numero.service?.name ?? '—' }}
             </td>
 
-            <!-- ✅ Editable NDappel -->
-            <td class="border p-2" @dblclick="enableEdit(numero)">
-              <input
-                v-if="numero.isEditing && numero.technologie?.name?.toUpperCase() === 'MOBILE'"
-                v-model="numero.NDappel"
-                @blur="saveNDappel(numero)"
-                class="border border-green-300 rounded-md px-2 py-1 w-full"
-                placeholder="Edit NDappel"
-              />
-              <span v-else>{{ numero.NDappel }}</span>
-            </td>
+            <td
+  class="border p-2 relative"
+  @dblclick="enableEdit(numero)"
+>
+  <!-- Edit Input -->
+  <input
+    v-if="numero.isEditing && numero.technologie?.name?.toUpperCase() === 'MOBILE'"
+    v-model="numero.NDappel"
+    @blur="saveNDappel(numero)"
+    class="border border-green-300 rounded-md px-2 py-1 w-full"
+  />
+
+  <!-- Normal Display -->
+  <span
+    v-else
+    class="cursor-pointer text-green-700 font-semibold"
+    @mouseenter="showNotes(numero)"
+    @mouseleave="hideNotes"
+  >
+    {{ numero.NDappel }}
+  </span>
+
+  <!-- 📝 NOTES TOOLTIP -->
+  <div
+    v-if="hoveredNumero?.id === numero.id"
+    class="absolute z-50 bg-white border border-green-300 shadow-xl rounded-lg p-3 w-64 top-full left-0 mt-2"
+  >
+    <div class="font-bold text-green-700 mb-2">
+      📝 Notes
+    </div>
+
+    <div
+      v-if="numero.notes && numero.notes.length > 0"
+      class="space-y-2 max-h-40 overflow-y-auto text-sm"
+    >
+      <div
+  v-for="note in numero.notes"
+  :key="note.id"
+  class="bg-green-50 border border-green-200 rounded-md p-2 text-sm break-words text-left"
+  dir="ltr"
+>
+  {{ note.content }}
+</div>
+    </div>
+
+    <div v-else class="text-gray-400 italic text-sm">
+      Aucune note
+    </div>
+  </div>
+</td>
           </tr>
 
           <tr v-if="displayedNumeros.length === 0">
@@ -431,5 +470,14 @@ function enableEdit(numero) {
 function saveNDappel(numero) {
   numero.isEditing = false
   router.post('/numeros/update-ndappel', { id: numero.id, NDappel: numero.NDappel }, { preserveScroll: true, preserveState: true })
+}
+const hoveredNumero = ref(null)
+
+function showNotes(numero) {
+  hoveredNumero.value = numero
+}
+
+function hideNotes() {
+  hoveredNumero.value = null
 }
 </script>

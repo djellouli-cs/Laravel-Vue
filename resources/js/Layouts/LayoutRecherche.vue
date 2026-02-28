@@ -72,20 +72,14 @@ onMounted(async () => {
         <Link href="/logout" method="post" as="button" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-full">Logout</Link>
       </div>
 
-      <HelloWorld msg="Annuaire ☎️" />
+      <HelloWorld msg="Recherche 🔍" />
 
       <!-- Navigation -->
       <nav class="mt-6 flex flex-wrap justify-center gap-2 sm:gap-4 text-sm sm:text-base font-medium">
-        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('profile.show')" :class="linkClass('profile.show')">Profile</Link>
-        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('home')" :class="linkClass('home')">Utilisateurs</Link>
+        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('Searsh.index')" :class="[linkClass('Searsh.index'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded']">🔎</Link>
+        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('Annuaire.filter')" :class="[linkClass('Annuaire.filter'), 'bg-blue-600 text-white hover:bg-blue-700 font-semibold px-4 py-2 rounded']">Filtrage</Link>
+        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('Annuaire.recherche')" :class="[linkClass('Annuaire.recherche'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded']">Recherche</Link>
         <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('numero.manage')" :class="linkClass('numero.manage')">Edit Numero</Link>
-        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('Searsh.index')" :class="[linkClass('Searsh.index'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded']">Recherche</Link>
-        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('acheminements.swd')" :class="[linkClass('acheminements.swd'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded']">Autocom</Link>
-       <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('permanences.index')" :class="[linkClass('permanences.index'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded']">Permanences</Link>
-        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('permanences.this-week')" :class="[linkClass('permanences.this-week'), prochainCount > 0 ? 'bg-green-600 text-white px-4 py-2 rounded relative' : 'bg-red-600 text-white px-4 py-2 rounded relative']">
-          P
-          <span v-if="hasProchainAlert" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse" :title="`${prochainCount} permanence(s) PROCHAIN détectée(s)`">{{ prochainCount > 9 ? '9+' : prochainCount }}</span>
-        </Link>
       </nav>
     </header>
 
