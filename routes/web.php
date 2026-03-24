@@ -143,6 +143,8 @@ Route::get('/acheminements/adm', [AcheminementController::class, 'adm'])->name('
     Route::post('/manageFacture', [FactureController::class, 'store']);
     Route::put('/manageFacture/{id}', [FactureController::class, 'update']);
     Route::delete('/manageFacture/{id}', [FactureController::class, 'destroy']);
+    Route::get('/facture', [FactureController::class, 'facture'])->name('facture');
+
 
     // Posts
     Route::get('/managePost', [PostController::class, 'index'])->name('Post.manage');

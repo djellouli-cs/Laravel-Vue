@@ -80,6 +80,7 @@ onMounted(async () => {
         <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('home')" :class="linkClass('home')">Utilisateurs</Link>
         <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('numero.manage')" :class="linkClass('numero.manage')">Edit Numero</Link>
         <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('Searsh.index')" :class="[linkClass('Searsh.index'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded']">Recherche</Link>
+        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('facture')" :class="[linkClass('facture'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded']">Facture</Link>
         <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('acheminements.swd')" :class="[linkClass('acheminements.swd'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded']">Autocom</Link>
        <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('permanences.index')" :class="[linkClass('permanences.index'), 'bg-green-600 text-white hover:bg-green-700 font-semibold px-4 py-2 rounded']">Permanences</Link>
         <Link v-if="auth.user && auth.user.role === 'admin'" :href="route('permanences.this-week')" :class="[linkClass('permanences.this-week'), prochainCount > 0 ? 'bg-green-600 text-white px-4 py-2 rounded relative' : 'bg-red-600 text-white px-4 py-2 rounded relative']">

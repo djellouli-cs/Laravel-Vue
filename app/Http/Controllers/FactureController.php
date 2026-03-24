@@ -1,7 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Numero;
+use App\Models\Organisme;
+use App\Models\Destination;
+use App\Models\Service;
+use App\Models\Technologie;
 use App\Models\Facture;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -86,4 +90,14 @@ class FactureController extends Controller
 
         return redirect()->route('facture.manage')->with('success', 'Facture supprimée.');
     }
+    public function facture()
+{
+    return Inertia::render('Facture', [
+        'factures' => Facture::with([
+            'numeros.destination',
+            'numeros.organisme',
+            'numeros.technologie'
+        ])->get(),
+    ]);
+}
 }
