@@ -174,7 +174,6 @@ function resetFilters() {
           <tr>
             <th class="px-4 py-2 border-b text-left">ID</th>
             <th class="px-4 py-2 border-b text-left">Facture</th>
-            <th class="px-4 py-2 border-b text-left">Fournisseur</th>
             <th class="px-4 py-2 border-b text-left">Numéro</th>
             <th class="px-4 py-2 border-b text-left">Destination</th>
             <th class="px-4 py-2 border-b text-left">Organisme</th>
@@ -185,7 +184,6 @@ function resetFilters() {
           <tr v-for="f in filteredFactures" :key="f.id" class="hover:bg-gray-50">
             <td class="px-4 py-2 border-b">{{ f.id }}</td>
             <td class="px-4 py-2 border-b">{{ f.facture }}</td>
-            <td class="px-4 py-2 border-b">{{ f.provider }}</td>
 
             <td class="px-4 py-2 border-b">
               <div v-for="n in f.numeros" :key="n.id">{{ n.NDappel }}</div>
