@@ -17,11 +17,10 @@ const selectedOrganismes = ref([])
 const techDropdownOpen = ref(false)
 const orgDropdownOpen = ref(false)
 
-// Références DOM pour détecter les clics en dehors
+// Références pour click outside
 const techDropdownRef = ref(null)
 const orgDropdownRef = ref(null)
 
-// Fonction pour fermer les dropdowns si clic en dehors
 function handleClickOutside(event) {
   if (techDropdownRef.value && !techDropdownRef.value.contains(event.target)) {
     techDropdownOpen.value = false
@@ -61,28 +60,42 @@ const allOrganismes = computed(() => {
   return Array.from(set)
 })
 
-// Factures filtrées
+// Factures filtrées et numeros filtrés
 const filteredFactures = computed(() => {
-  return props.factures.filter(f => {
-    const matchesSearch =
-      !searchQuery.value ||
-      f.facture.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      (f.provider && f.provider.toLowerCase().includes(searchQuery.value.toLowerCase()))
+  return props.factures
+    .map(f => {
+      // filtrer numeros par recherche
+      let numeros = f.numeros.filter(n => {
+        const matchesSearch =
+          !searchQuery.value ||
+          (f.facture && f.facture.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+          (f.provider && f.provider.toLowerCase().includes(searchQuery.value.toLowerCase()))
+        return matchesSearch
+      })
 
-    const matchesTechnologie =
-      selectedTechnologies.value.length === 0 ||
-      f.numeros.some(
-        n => n.technologie && selectedTechnologies.value.includes(n.technologie.name)
-      )
+      // filtrer numeros par technologie
+      if (selectedTechnologies.value.length > 0) {
+        numeros = numeros.filter(n =>
+          n.technologie && selectedTechnologies.value.includes(n.technologie.name)
+        )
+      }
 
-    const matchesOrganisme =
-      selectedOrganismes.value.length === 0 ||
-      f.numeros.some(
-        n => n.organisme && selectedOrganismes.value.includes(n.organisme.name)
-      )
+      // filtrer numeros par organisme
+      if (selectedOrganismes.value.length > 0) {
+        numeros = numeros.filter(n =>
+          n.organisme && selectedOrganismes.value.includes(n.organisme.name)
+        )
+      }
 
-    return matchesSearch && matchesTechnologie && matchesOrganisme
-  })
+      // ne garder la facture que si elle a au moins un numero filtré
+      if (numeros.length === 0) return null
+
+      return {
+        ...f,
+        numeros
+      }
+    })
+    .filter(f => f !== null)
 })
 
 // Réinitialiser les filtres
