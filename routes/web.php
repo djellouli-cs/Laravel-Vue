@@ -63,6 +63,7 @@ Route::get('/acheminements/divers', [AcheminementController::class, 'divers'])->
 Route::get('/acheminements/adm', [AcheminementController::class, 'adm'])->name('acheminements.adm');
 
     // Permanences
+Route::middleware(['auth', 'approvedOnly'])->group(function () {
     Route::get('/permanences', [PermanenceController::class, 'index'])->name('permanences.index');
     Route::get('/permanences/create', [PermanenceController::class, 'create'])->name('permanences.create');
     Route::post('/permanences', [PermanenceController::class, 'store'])->name('permanences.store');
@@ -71,8 +72,13 @@ Route::get('/acheminements/adm', [AcheminementController::class, 'adm'])->name('
     Route::get('/permanences/{permanence}/edit', [PermanenceController::class, 'edit'])->name('permanences.edit');
     Route::put('/permanences/{permanence}', [PermanenceController::class, 'update'])->name('permanences.update');
     Route::delete('/permanences/{permanence}', [PermanenceController::class, 'destroy'])->name('permanences.destroy');
-    Route::get('/api/prochain-permanences', [PermanenceController::class, 'apiProchainPermanences'])->name('api.prochain-permanences');
 
+    // Current week
+    Route::get('/permanences/this-week', [PermanenceController::class, 'thisWeek'])->name('permanences.this-week');
+
+    // API
+    Route::get('/api/prochain-permanences', [PermanenceController::class, 'apiProchainPermanences'])->name('api.prochain-permanences');
+});
     // Numero edit
     Route::get('/numeros/{numero}/edit', [NumeroController::class, 'edit'])->name('numeros.edit');
 
