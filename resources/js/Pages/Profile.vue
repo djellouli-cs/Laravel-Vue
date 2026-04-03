@@ -50,6 +50,8 @@ const submitAvatar = () => {
     forceFormData: true,
   })
 }
+// Add this to your script setup
+//console.log('Avatar URL from props:', props.user.avatar_url)
 </script>
 <template>
   <div class="max-w-2xl mx-auto p-8 bg-white rounded-2xl shadow-md mt-10">
