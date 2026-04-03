@@ -45,7 +45,7 @@ const linkClass = (routeName) => {
 // -----------------------------
 const fetchPermanence = async () => {
   try {
-    const res = await axios.get('/api/permanence-this-week')
+    const res = await axios.get('/permanence-this-week')
     permanence.value = res.data || null
     buttonLabel.value = res.data?.PSemaine || 'Permanence'
   } catch (err) {
@@ -57,7 +57,7 @@ const fetchPermanence = async () => {
 
 const fetchProchainCount = async () => {
   try {
-    const res = await axios.get('/api/prochain-permanences')
+    const res = await axios.get('/prochain-permanences')
     prochainCount.value = res.data?.count || 0
     hasProchainAlert.value = prochainCount.value > 0
   } catch (err) {

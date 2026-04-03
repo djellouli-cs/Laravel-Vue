@@ -40,8 +40,8 @@ use App\Http\Controllers\SearshController;
 // Protected routes
 // ========================
 Route::middleware(['auth'])->group(function () {
-    Route::get('/permanences/this-week', [PermanenceController::class, 'thisWeek'])
-        ->name('permanences.this-week');
+    Route::get('/permanence-this-week', [PermanenceController::class, 'thisWeek']);
+
 });
 
 Route::middleware(['auth', 'approvedOnly'])->group(function () {
@@ -74,10 +74,10 @@ Route::middleware(['auth', 'approvedOnly'])->group(function () {
     Route::delete('/permanences/{permanence}', [PermanenceController::class, 'destroy'])->name('permanences.destroy');
 
     // Current week
-    Route::get('/permanences/this-week', [PermanenceController::class, 'thisWeek'])->name('permanences.this-week');
+    Route::get('/permanences-this-week', [PermanenceController::class, 'thisWeek'])->name('permanences.this-week');
 
     // API
-    Route::get('/api/prochain-permanences', [PermanenceController::class, 'apiProchainPermanences'])->name('api.prochain-permanences');
+    Route::get('/prochain-permanences', [PermanenceController::class, 'apiProchainPermanences'])->name('api.prochain-permanences');
 });
     // Numero edit
     Route::get('/numeros/{numero}/edit', [NumeroController::class, 'edit'])->name('numeros.edit');

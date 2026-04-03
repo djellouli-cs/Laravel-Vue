@@ -156,12 +156,12 @@ const hasProchainAlert = ref(false)
 onMounted(async () => {
   try {
     // Get current week permanence
-    const res = await axios.get('/api/permanence-this-week')
+    const res = await axios.get('/permanence-this-week')
     permanence.value = res.data
     buttonLabel.value = res.data ? res.data.PSemaine : 'Permanence'
     
     // Check for PROCHAIN permanences
-    const prochainRes = await axios.get('/api/prochain-permanences')
+    const prochainRes = await axios.get('/prochain-permanences')
     prochainCount.value = prochainRes.data.count
     hasProchainAlert.value = prochainCount.value > 0
   } catch (error) {
