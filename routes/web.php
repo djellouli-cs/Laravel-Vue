@@ -33,9 +33,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\StandardController;
 use App\Http\Controllers\SearshController;
 
-
-
-
 // ========================
 // Protected routes
 // ========================

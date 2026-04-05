@@ -16,6 +16,8 @@ use App\Models\Service;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Events\TestEvent;
+
 
 class NumeroController extends Controller
 {
@@ -139,7 +141,7 @@ class NumeroController extends Controller
             // Update the Numero with user_id
             $formData['user_id'] = auth()->id();
             $numero->update($formData);
-
+            broadcast(new TestEvent());
             return redirect()->route('numero.manage')->with('success', 'Numéro mis à jour avec succès.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->validator)->withInput();
