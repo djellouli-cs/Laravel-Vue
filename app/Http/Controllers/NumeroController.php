@@ -16,7 +16,7 @@ use App\Models\Service;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Events\TestEvent;
+use App\Events\NumeroUpdated;
 
 
 class NumeroController extends Controller
@@ -109,8 +109,19 @@ class NumeroController extends Controller
 
             // Create the Numero with user_id
             $formData['user_id'] = auth()->id();
-            Numero::create($formData);
+            $numero=Numero::create($formData);
+// Load relations (VERY IMPORTANT)
+        $numero->load([
+            'organisme',
+            'destination',
+            'classe',
+            'type',
+            'service',
+            'acheminements'
+        ]);
 
+        // Broadcast ONCE
+        broadcast(new NumeroUpdated($numero))->toOthers();
             return redirect()->route('numero.manage')->with('success', 'Numéro créé avec succès.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->validator)->withInput();
@@ -121,33 +132,43 @@ class NumeroController extends Controller
      * Met à jour un numéro existant.
      */
     public function update(Request $request, $id)
-    {
-        try {
-            $validated = $request->validate($this->validationRules($id), $this->messages());
+{
+    try {
+        $validated = $request->validate($this->validationRules($id), $this->messages());
 
-            // Find the Numero by ID
-            $numero = Numero::findOrFail($id);
+        $numero = Numero::findOrFail($id);
 
-            // Handle null values explicitly
-            $formData = $request->all();
-            
-            // Ensure nullable fields are set to null if they are empty
-            foreach ($formData as $key => $value) {
-                if (empty($value)) {
-                    $formData[$key] = null;
-                }
+        $formData = $request->all();
+
+        foreach ($formData as $key => $value) {
+            if (empty($value)) {
+                $formData[$key] = null;
             }
-
-            // Update the Numero with user_id
-            $formData['user_id'] = auth()->id();
-            $numero->update($formData);
-            broadcast(new TestEvent());
-            return redirect()->route('numero.manage')->with('success', 'Numéro mis à jour avec succès.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->withErrors($e->validator)->withInput();
         }
-    }
 
+        $formData['user_id'] = auth()->id();
+
+        $numero->update($formData);
+
+        // Load relations (VERY IMPORTANT)
+        $numero->load([
+            'organisme',
+            'destination',
+            'classe',
+            'type',
+            'service',
+            'acheminements'
+        ]);
+
+        // Broadcast ONCE
+        broadcast(new NumeroUpdated($numero))->toOthers();
+
+        return redirect()->route('numero.manage')->with('success', 'Numéro mis à jour avec succès.');
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return back()->withErrors($e->validator)->withInput();
+    }
+}
     /**
      * Supprime un numéro.
      */
@@ -155,6 +176,9 @@ class NumeroController extends Controller
     {
         $numero = Numero::findOrFail($id);
         $numero->delete();
+    broadcast(new NumeroUpdated($numero, true))->toOthers();
+
+
 
         return redirect()->route('numero.manage')->with('success', 'Numéro supprimé avec succès.');
     }
