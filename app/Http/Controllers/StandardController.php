@@ -107,6 +107,18 @@ class StandardController extends Controller
         if (strtoupper($numero->technologie->name ?? '') === 'MOBILE') {
             $numero->NDappel = $validated['NDappel'];
             $numero->save();
+            $numero->load([
+            'organisme',
+            'destination',
+            'classe',
+            'type',
+            'service',
+            'acheminements'
+        ]);
+
+        // Broadcast ONCE
+        broadcast(new NumeroUpdated($numero))->toOthers();
+        
         }
 
         return back();

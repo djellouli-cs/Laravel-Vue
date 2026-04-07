@@ -1,42 +1,46 @@
 <template>
-
-
   <div
     ref="containerRef"
     :dir="currentLang === 'ar' ? 'rtl' : 'ltr'"
     class="min-h-screen bg-gradient-to-br from-green-50 to-white py-10"
   >
-  
     <div class="p-8 max-w-5xl mx-auto bg-white rounded-2xl shadow-xl border border-green-100">
-  <div v-for="destination in destinations" :key="destination.id" class="mb-6">
-  <div v-if="destination.name === permanence.PSemaine">
-    <h2 class="text-lg font-bold text-green-800 mb-2 flex items-center gap-2">
-      🎯 المداوم : {{ destination.name }}
-    </h2>
 
-    <div class="space-y-2">
-      <div
-        v-for="numero in mobileNumeros(destination.numeros)"
-        :key="numero.id"
-        class="flex items-center justify-between bg-green-50 border border-green-100 rounded-xl p-3 shadow-sm hover:bg-green-100 transition"
-      >
-        <div class="flex items-center gap-2">
-          <span class="text-white bg-green-500 w-6 h-6 flex items-center justify-center rounded-full text-sm">📱</span>
-          <span class="font-medium">{{ numero.NDappel }}</span>
+      <!-- 🎯 Destinations / Permanence -->
+      <div v-if="filteredDestinations.length">
+        <div v-for="destination in filteredDestinations" :key="destination.id" class="mb-6">
+          <h2 class="text-lg font-bold text-green-800 mb-2 flex items-center gap-2">
+            🎯 المداوم : {{ destination.name }}
+          </h2>
+
+          <div class="space-y-2">
+            <div
+              v-for="numero in mobileNumeros(destination.numeros)"
+              :key="numero.id"
+              class="flex items-center justify-between bg-green-50 border border-green-100 rounded-xl p-3 shadow-sm hover:bg-green-100 transition"
+            >
+              <div class="flex items-center gap-2">
+                <span class="text-white bg-green-500 w-6 h-6 flex items-center justify-center rounded-full text-sm">📱</span>
+                <span class="font-medium">{{ numero.NDappel }}</span>
+              </div>
+              <span class="text-green-600 font-semibold">3360</span>
+            </div>
+
+            <div
+              v-if="mobileNumeros(destination.numeros).length === 0"
+              class="text-gray-500 italic flex items-center gap-2"
+            >
+              📵 No mobile number found
+            </div>
+          </div>
         </div>
-        <span class="text-green-600 font-semibold">3360</span>
       </div>
 
-      <div
-        v-if="mobileNumeros(destination.numeros).length === 0"
-        class="text-gray-500 italic flex items-center gap-2"
-      >
-        📵 No mobile number found
+      <div v-else class="text-center text-gray-500 italic p-6">
+        ⚠️ {{ currentLang === 'ar' ? 'لا توجد مداومة هذا الأسبوع' : 'No permanence this week' }}
       </div>
-    </div>
-  </div>
-</div>
-    <!-- 🕒 Header -->
+
+      <!-- 🕒 Header -->
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-3xl font-extrabold text-green-800 flex items-center gap-2">
           <span>🕒</span>
@@ -96,7 +100,6 @@
 
       <!-- 🏷️ Selected Tags -->
       <div v-if="selectedOrganisme || selectedDestination" class="flex flex-wrap gap-2 mt-2 mb-4">
-        <!-- Organisme Tag -->
         <div
           v-if="selectedOrganisme"
           class="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full shadow-sm text-sm font-medium"
@@ -110,7 +113,6 @@
           </button>
         </div>
 
-        <!-- Destination Tag -->
         <div
           v-if="selectedDestination"
           class="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full shadow-sm text-sm font-medium"
@@ -124,7 +126,6 @@
           </button>
         </div>
 
-        <!-- Clear All Tag -->
         <div
           class="flex items-center gap-2 bg-red-100 text-red-800 px-3 py-1 rounded-full shadow-sm text-sm font-medium cursor-pointer hover:bg-red-200 transition"
           @click="clearAllFilters"
@@ -142,9 +143,7 @@
           v-model="selectedDestination"
           class="border border-green-300 rounded-lg px-3 py-2 text-green-800 w-full"
         >
-          <option value="">
-            {{ currentLang === 'ar' ? 'بدون وجهة' : 'No destination' }}
-          </option>
+          <option value="">{{ currentLang === 'ar' ? 'بدون وجهة' : 'No destination' }}</option>
           <option
             v-for="(dest, i) in destinationsByOrganisme"
             :key="i"
@@ -173,7 +172,6 @@
             <th class="border p-2 text-left">NDappel</th>
           </tr>
         </thead>
-
         <tbody>
           <tr
             v-for="numero in displayedNumeros"
@@ -190,57 +188,44 @@
             <td class="border p-2">
               {{ currentLang === 'fr' ? numero.service?.name_fr ?? '—' : numero.service?.name ?? '—' }}
             </td>
-
             <td
-  class="border p-2 relative"
-  @dblclick="enableEdit(numero)"
->
-  <!-- Edit Input -->
-  <input
-    v-if="numero.isEditing && numero.technologie?.name?.toUpperCase() === 'MOBILE'"
-    v-model="numero.NDappel"
-    @blur="saveNDappel(numero)"
-    class="border border-green-300 rounded-md px-2 py-1 w-full"
-  />
+              class="border p-2 relative"
+              @dblclick="enableEdit(numero)"
+            >
+              <input
+                v-if="numero.isEditing && numero.technologie?.name?.toUpperCase() === 'MOBILE'"
+                v-model="numero.NDappel"
+                @blur="saveNDappel(numero)"
+                class="border border-green-300 rounded-md px-2 py-1 w-full"
+              />
+              <span
+                v-else
+                class="cursor-pointer text-green-700 font-semibold"
+                @mouseenter="showNotes(numero)"
+                @mouseleave="hideNotes()"
+              >
+                {{ numero.NDappel }}
+              </span>
 
-  <!-- Normal Display -->
-  <span
-    v-else
-    class="cursor-pointer text-green-700 font-semibold"
-    @mouseenter="showNotes(numero)"
-    @mouseleave="hideNotes"
-  >
-    {{ numero.NDappel }}
-  </span>
-
-  <!-- 📝 NOTES TOOLTIP -->
-  <div
-    v-if="hoveredNumero?.id === numero.id"
-    class="absolute z-50 bg-white border border-green-300 shadow-xl rounded-lg p-3 w-64 top-full left-0 mt-2"
-  >
-    <div class="font-bold text-green-700 mb-2">
-      📝 Notes
-    </div>
-
-    <div
-      v-if="numero.notes && numero.notes.length > 0"
-      class="space-y-2 max-h-40 overflow-y-auto text-sm"
-    >
-      <div
-  v-for="note in numero.notes"
-  :key="note.id"
-  class="bg-green-50 border border-green-200 rounded-md p-2 text-sm break-words text-left"
-  dir="ltr"
->
-  {{ note.content }}
-</div>
-    </div>
-
-    <div v-else class="text-gray-400 italic text-sm">
-      Aucune note
-    </div>
-  </div>
-</td>
+              <!-- 📝 Notes Tooltip -->
+              <div
+                v-if="hoveredNumero?.id === numero.id"
+                class="absolute z-50 bg-white border border-green-300 shadow-xl rounded-lg p-3 w-64 top-full left-0 mt-2"
+              >
+                <div class="font-bold text-green-700 mb-2">📝 Notes</div>
+                <div v-if="numero.notes?.length" class="space-y-2 max-h-40 overflow-y-auto text-sm">
+                  <div
+                    v-for="note in numero.notes"
+                    :key="note.id"
+                    class="bg-green-50 border border-green-200 rounded-md p-2 text-sm break-words text-left"
+                    dir="ltr"
+                  >
+                    {{ note.content }}
+                  </div>
+                </div>
+                <div v-else class="text-gray-400 italic text-sm">Aucune note</div>
+              </div>
+            </td>
           </tr>
 
           <tr v-if="displayedNumeros.length === 0">
@@ -256,201 +241,219 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, usePage } from '@inertiajs/vue3'
 import Layout from '@/Layouts/LayoutStandard.vue'
-import { usePage } from '@inertiajs/vue3'
+import '@/Echo.js'
 
 defineOptions({ layout: Layout })
+
 const page = usePage()
-const permanence = computed(() => page.props.permanence)
-const destinations = computed(() => page.props.destinations)
-const mobileNumeros = (numeros) => {
-  return (numeros || []).filter(n => n.technologie && n.technologie.name === 'MOBILE')
-}
-const props = defineProps({
-  numeros: { type: Array, default: () => [] }
-})
+const props = defineProps({ numeros: { type: Array, default: () => [] } })
 
-const containerRef = ref(null)
-const search = ref('')
-const activeIndex = ref(-1)
-const showSuggestions = ref(false)
-const currentLang = ref('ar')
-let debounceTimer = null
+// Declare currentLang FIRST before using it
+const currentLang = ref(localStorage.getItem('currentLang') || 'ar')
 
-// 🕒 Time
+// ⏰ Live clock - Now currentLang is defined
 const currentTime = ref('')
 function updateTime() {
   const now = new Date()
-  currentTime.value = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes()
-    .toString()
-    .padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
-}
-onMounted(() => {
-  updateTime()
-  setInterval(updateTime, 1000)
-})
-
-const normalize = v => String(v ?? '').trim().toLowerCase()
-
-// 🟢 Selected organisme + destination
-const selectedOrganisme = ref(null)
-const selectedDestination = ref(null)
-
-// 💾 Load saved filters from localStorage
-onMounted(() => {
-  const savedLang = localStorage.getItem('currentLang')
-  const savedSearch = localStorage.getItem('search')
-  const savedOrganisme = localStorage.getItem('selectedOrganisme')
-  const savedDestination = localStorage.getItem('selectedDestination')
-
-  if (savedLang) currentLang.value = savedLang
-  if (savedSearch) search.value = savedSearch
-  if (savedOrganisme) selectedOrganisme.value = savedOrganisme
-  if (savedDestination) selectedDestination.value = savedDestination
-})
-
-// 🧹 Clear filters
-function clearAllFilters() {
-  selectedOrganisme.value = null
-  selectedDestination.value = null
-  search.value = ''
-  debouncedSearch.value = ''
-  localStorage.removeItem('selectedOrganisme')
-  localStorage.removeItem('selectedDestination')
-  localStorage.removeItem('search')
+  currentTime.value = now.toLocaleTimeString(currentLang.value === 'fr' ? 'fr-FR' : 'ar-DZ')
 }
 
-// 🔍 Debounced search
-const debouncedSearch = ref('')
-watch(search, val => {
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => (debouncedSearch.value = val), 200)
-  activeIndex.value = -1
-  showSuggestions.value = true
-  if (!val.trim()) clearAllFilters()
+// Initialize time
+updateTime()
+// Set interval for clock
+const timeInterval = setInterval(updateTime, 1000)
+
+// Use reactive refs for real-time data
+const localNumeros = ref([])
+const permanence = ref(null)
+const destinations = ref([])
+
+// Initialize data
+const initData = () => {
+  localNumeros.value = [...props.numeros]
+  permanence.value = page.props.permanence
+  destinations.value = page.props.destinations || []
+}
+
+initData()
+
+// Watch for props changes
+watch(() => props.numeros, (newVal) => {
+  localNumeros.value = [...newVal]
+}, { deep: true })
+
+watch(() => page.props.permanence, (newVal) => {
+  permanence.value = newVal
 })
 
-// 🧠 Save filters to localStorage
-watch(currentLang, val => localStorage.setItem('currentLang', val))
-watch(search, val => localStorage.setItem('search', val))
-watch(selectedOrganisme, val => {
-  if (val) localStorage.setItem('selectedOrganisme', val)
+watch(() => page.props.destinations, (newVal) => {
+  destinations.value = newVal || []
+})
+
+// Filtered destinations for permanence
+const filteredDestinations = computed(() => {
+  if (!permanence.value?.PSemaine) return []
+  return destinations.value.filter(d => d.name === permanence.value.PSemaine)
+})
+
+const mobileNumeros = (numeros) => {
+  return (numeros || []).filter(n => n.technologie?.name === 'MOBILE')
+}
+
+// 💻 Real-time Echo updates
+onMounted(() => {
+  if (window.Echo) {
+    // Channel for numeros updates
+    window.Echo.channel('numeros')
+      .listen('.NumeroUpdated', (e) => {
+        console.log('Real-time update received:', e)
+        const updated = e.numero
+        const index = localNumeros.value.findIndex(n => n.id === updated.id)
+        
+        if (e.deleted) {
+          if (index !== -1) {
+            localNumeros.value.splice(index, 1)
+          }
+        } else {
+          if (index !== -1) {
+            // Preserve isEditing state
+            const wasEditing = localNumeros.value[index].isEditing
+            Object.assign(localNumeros.value[index], updated)
+            if (wasEditing) localNumeros.value[index].isEditing = true
+          } else {
+            localNumeros.value.unshift(updated)
+          }
+        }
+        
+        // Force reactivity
+        localNumeros.value = [...localNumeros.value]
+      })
+
+    // Channel for permanence updates
+    window.Echo.channel('permanences')
+      .listen('.PermanenceUpdated', (e) => {
+        console.log('Permanence update received:', e)
+        permanence.value = e.deleted ? null : e.permanence
+      })
+  } else {
+    console.warn('Echo not initialized')
+  }
+})
+
+// Cleanup interval on unmount
+onBeforeUnmount(() => {
+  clearInterval(timeInterval)
+})
+
+// 🔍 Search and filters
+const containerRef = ref(null)
+const search = ref(localStorage.getItem('search') || '')
+const selectedOrganisme = ref(localStorage.getItem('selectedOrganisme') || null)
+const selectedDestination = ref(localStorage.getItem('selectedDestination') || null)
+const showSuggestions = ref(false)
+const activeIndex = ref(-1)
+
+// Save to localStorage
+watch([search, currentLang, selectedOrganisme, selectedDestination], () => {
+  localStorage.setItem('search', search.value)
+  localStorage.setItem('currentLang', currentLang.value)
+  if (selectedOrganisme.value) localStorage.setItem('selectedOrganisme', selectedOrganisme.value)
   else localStorage.removeItem('selectedOrganisme')
-})
-watch(selectedDestination, val => {
-  if (val) localStorage.setItem('selectedDestination', val)
+  if (selectedDestination.value) localStorage.setItem('selectedDestination', selectedDestination.value)
   else localStorage.removeItem('selectedDestination')
 })
 
-// 🧭 Destinations for selected organisme
+// 🏢 Destinations by selected organisme
 const destinationsByOrganisme = computed(() => {
   if (!selectedOrganisme.value) return []
-  return props.numeros
+  return localNumeros.value
     .filter(n => {
-      const orgName = currentLang.value === 'fr' ? n.organisme?.name_fr : n.organisme?.name
-      return orgName === selectedOrganisme.value
+      const org = currentLang.value === 'fr' ? n.organisme?.name_fr : n.organisme?.name
+      return org === selectedOrganisme.value
     })
     .map(n => currentLang.value === 'fr' ? n.destination?.name_fr : n.destination?.name)
     .filter(Boolean)
     .filter((v, i, self) => self.indexOf(v) === i)
 })
 
-// 📋 Table Filter
+// 📋 Displayed numeros — reactive and real-time
+const normalize = v => String(v ?? '').trim().toLowerCase()
 const displayedNumeros = computed(() => {
-  const q = normalize(debouncedSearch.value)
-  return props.numeros.filter(n => {
+  const q = normalize(search.value)
+  return localNumeros.value.filter(n => {
     const NDappelStr = String(n.NDappel ?? '').toLowerCase()
-    const matchesSearch =
-      NDappelStr.includes(q) ||
-      normalize(n.name).includes(q) ||
-      normalize(currentLang.value === 'fr' ? n.organisme?.name_fr : n.organisme?.name).includes(q) ||
-      normalize(currentLang.value === 'fr' ? n.destination?.name_fr : n.destination?.name).includes(q)
-
-    const matchesOrganisme =
-      !selectedOrganisme.value ||
-      (currentLang.value === 'fr'
-        ? n.organisme?.name_fr === selectedOrganisme.value
-        : n.organisme?.name === selectedOrganisme.value)
-
-    const matchesDestination =
-      !selectedDestination.value ||
-      (currentLang.value === 'fr'
-        ? n.destination?.name_fr === selectedDestination.value
-        : n.destination?.name === selectedDestination.value)
-
+    const nameStr = normalize(n.name)
+    const orgStr = normalize(currentLang.value === 'fr' ? n.organisme?.name_fr : n.organisme?.name)
+    const destStr = normalize(currentLang.value === 'fr' ? n.destination?.name_fr : n.destination?.name)
+    
+    const matchesSearch = !q || NDappelStr.includes(q) || nameStr.includes(q) || orgStr.includes(q) || destStr.includes(q)
+    const matchesOrganisme = !selectedOrganisme.value || orgStr === normalize(selectedOrganisme.value)
+    const matchesDestination = !selectedDestination.value || destStr === normalize(selectedDestination.value)
+    
     return matchesSearch && matchesOrganisme && matchesDestination
   })
 })
 
-// 💡 Suggestions
+// 💡 Suggestions — real-time
 const filteredSuggestions = computed(() => {
   const q = normalize(search.value)
   if (!q) return []
-  return props.numeros.filter(n => {
-    const NDappelStr = String(n.NDappel ?? '').toLowerCase()
-    return NDappelStr.includes(q) || normalize(n.name).includes(q)
-  }).slice(0, 5)
+  return localNumeros.value.filter(n => 
+    String(n.NDappel ?? '').toLowerCase().includes(q) || normalize(n.name).includes(q)
+  ).slice(0, 5)
 })
 
 const filteredOrganismes = computed(() => {
   const q = normalize(search.value)
-  const uniqueOrgs = [
-    ...new Set(
-      props.numeros.map(n =>
-        currentLang.value === 'fr' ? n.organisme?.name_fr : n.organisme?.name
-      ).filter(Boolean)
-    )
-  ]
-  if (!q) return uniqueOrgs
-  return uniqueOrgs.filter(org => normalize(org).includes(q))
+  const unique = [...new Set(localNumeros.value.map(n => 
+    currentLang.value === 'fr' ? n.organisme?.name_fr : n.organisme?.name
+  ).filter(Boolean))]
+  return !q ? unique : unique.filter(org => normalize(org).includes(q))
 })
 
-const showSuggestionList = computed(
-  () => showSuggestions.value && (filteredSuggestions.value.length > 0 || filteredOrganismes.value.length > 0)
-)
+const showSuggestionList = computed(() => showSuggestions.value && (filteredSuggestions.value.length || filteredOrganismes.value.length))
 
+// 🎯 Select suggestion
 function selectSuggestion(value) {
-  const isOrganisme = filteredOrganismes.value.includes(value)
-  if (isOrganisme) {
+  if (filteredOrganismes.value.includes(value)) {
     selectedOrganisme.value = value
     selectedDestination.value = null
   } else {
     selectedOrganisme.value = null
     selectedDestination.value = null
   }
-
   search.value = value
-  debouncedSearch.value = value
-  activeIndex.value = -1
   showSuggestions.value = false
+  activeIndex.value = -1
 }
 
-// ⌨️ Keyboard Navigation
+// ⌨️ Keyboard navigation
 function handleKeydown(e) {
   const total = filteredSuggestions.value.length + filteredOrganismes.value.length - 1
-  if (e.key === 'ArrowDown') {
+  if (e.key === 'ArrowDown') { 
+    e.preventDefault(); 
+    activeIndex.value = activeIndex.value < total ? activeIndex.value + 1 : 0 
+  }
+  else if (e.key === 'ArrowUp') { 
+    e.preventDefault(); 
+    activeIndex.value = activeIndex.value > 0 ? activeIndex.value - 1 : total 
+  }
+  else if (e.key === 'Enter') { 
     e.preventDefault()
-    activeIndex.value = activeIndex.value < total ? activeIndex.value + 1 : 0
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault()
-    activeIndex.value = activeIndex.value > 0 ? activeIndex.value - 1 : total
-  } else if (e.key === 'Enter') {
-    e.preventDefault()
-    let suggestion = null
-    if (activeIndex.value < filteredSuggestions.value.length) {
-      suggestion = filteredSuggestions.value[activeIndex.value]?.NDappel
-    } else {
-      suggestion = filteredOrganismes.value[activeIndex.value - filteredSuggestions.value.length]
-    }
+    let suggestion = activeIndex.value < filteredSuggestions.value.length 
+      ? filteredSuggestions.value[activeIndex.value]?.NDappel 
+      : filteredOrganismes.value[activeIndex.value - filteredSuggestions.value.length]
     if (suggestion) selectSuggestion(suggestion)
-  } else if (e.key === 'Escape') {
+  }
+  else if (e.key === 'Escape') {
     showSuggestions.value = false
     activeIndex.value = -1
   }
 }
 
-// 🖱️ Click outside
+// 🖱️ Outside click
 function onClickOutside(e) {
   if (!containerRef.value) return
   if (!containerRef.value.contains(e.target)) {
@@ -459,25 +462,41 @@ function onClickOutside(e) {
   }
 }
 onMounted(() => document.addEventListener('click', onClickOutside))
-onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onClickOutside)
+})
 
-// 💾 Edit NDappel
-function enableEdit(numero) {
+// ✏️ Edit NDappel
+function enableEdit(numero) { 
   if (numero.technologie?.name?.toUpperCase() === 'MOBILE') {
     numero.isEditing = true
   }
 }
+
 function saveNDappel(numero) {
   numero.isEditing = false
-  router.post('/numeros/update-ndappel', { id: numero.id, NDappel: numero.NDappel }, { preserveScroll: true, preserveState: true })
+  router.post('/numeros/update-ndappel', { 
+    id: numero.id, 
+    NDappel: numero.NDappel 
+  }, { 
+    preserveScroll: true, 
+    preserveState: true 
+  })
 }
+
+// 📝 Notes tooltip
 const hoveredNumero = ref(null)
-
-function showNotes(numero) {
-  hoveredNumero.value = numero
+function showNotes(numero) { 
+  hoveredNumero.value = numero 
+}
+function hideNotes() { 
+  hoveredNumero.value = null 
 }
 
-function hideNotes() {
-  hoveredNumero.value = null
+// 🧹 Clear all filters
+function clearAllFilters() {
+  selectedOrganisme.value = null
+  selectedDestination.value = null
+  search.value = ''
 }
 </script>

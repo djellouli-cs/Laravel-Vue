@@ -7,6 +7,7 @@ use App\Models\Destination;
 use App\Models\Groupe;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Events\PermanenceUpdated;
 
 class PermanenceController extends Controller
 {
@@ -27,23 +28,18 @@ class PermanenceController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Add week status to each permanence
         $permanences->getCollection()->transform(function ($permanence) {
             $permanence->week_status = $permanence->week_status;
             $permanence->week_status_color = $permanence->week_status_color;
             return $permanence;
         });
 
-        // Filter by week status if requested
         if ($request->week_status) {
             $permanences->setCollection(
-                $permanences->getCollection()->filter(function ($permanence) use ($request) {
-                    return $permanence->week_status === $request->week_status;
-                })
+                $permanences->getCollection()->filter(fn($p) => $p->week_status === $request->week_status)
             );
         }
 
-        // Get all destinations with their numeros for the helper functions
         $destinations = Destination::with('numeros.technologie')->get();
 
         return Inertia::render('Permanences/Index', [
@@ -57,20 +53,14 @@ class PermanenceController extends Controller
         ]);
     }
 
-
-
     public function create()
     {
-        // Get destinations that belong to the "permanence" group
-        $permanenceGroup = Groupe::where('groupes', 'permanence')->first();
-        
-        if ($permanenceGroup) {
-            $destinations = $permanenceGroup->destinations()->with('organisme')->get();
-        } else {
-            // Fallback to all destinations if no permanence group exists
-            $destinations = Destination::with('organisme')->get();
-        }
-        
+        $group = Groupe::where('groupes', 'permanence')->first();
+
+        $destinations = $group
+            ? $group->destinations()->with('organisme')->get()
+            : Destination::with('organisme')->get();
+
         return Inertia::render('Permanences/Create', [
             'destinations' => $destinations
         ]);
@@ -85,15 +75,19 @@ class PermanenceController extends Controller
             'RSemaine' => 'required|string|max:255',
         ]);
 
-        // Check if date already exists
-        $existingPermanence = Permanence::where('DSemaine', $data['DSemaine'])->first();
-        if ($existingPermanence) {
-            return back()->withErrors(['DSemaine' => "La date ({$data['DSemaine']}) existe."]);
+        if (Permanence::where('DSemaine', $data['DSemaine'])->exists()) {
+            return back()->withErrors([
+                'DSemaine' => "La date ({$data['DSemaine']}) existe."
+            ]);
         }
 
-        $permanence = Permanence::create($request->only([
-            'DSemaine', 'FSemaine', 'PSemaine', 'RSemaine'
-        ]));
+        $permanence = Permanence::create($data);
+
+        // ✅ load relations
+        $permanence->load('destinations.numeros.organisme');
+
+        // 🚀 broadcast CREATE
+        broadcast(new PermanenceUpdated($permanence, 'create'))->toOthers();
 
         return redirect()->route('permanences.index')
             ->with('success', 'Permanence created successfully.');
@@ -102,6 +96,7 @@ class PermanenceController extends Controller
     public function show(Permanence $permanence)
     {
         $permanence->load('destinations.numeros');
+
         return Inertia::render('Permanences/Show', [
             'permanence' => $permanence
         ]);
@@ -110,24 +105,17 @@ class PermanenceController extends Controller
     public function edit(Permanence $permanence)
     {
         $permanence->load('destinations');
-        
-        // Get destinations that belong to the "permanence" group
-        $permanenceGroup = Groupe::where('groupes', 'permanence')->first();
-        
-        if ($permanenceGroup) {
-            $destinations = $permanenceGroup->destinations()->with('organisme')->get();
-        } else {
-            // Fallback to all destinations if no permanence group exists
-            $destinations = Destination::with('organisme')->get();
-        }
-        
-        // Prepare selected destinations for the form
-        $selected_destinations = $permanence->destinations->map(function ($destination) {
-            return [
-                'id' => $destination->id,
-                'ordre' => $destination->pivot->ordre
-            ];
-        })->toArray();
+
+        $group = Groupe::where('groupes', 'permanence')->first();
+
+        $destinations = $group
+            ? $group->destinations()->with('organisme')->get()
+            : Destination::with('organisme')->get();
+
+        $selected_destinations = $permanence->destinations->map(fn($d) => [
+            'id' => $d->id,
+            'ordre' => $d->pivot->ordre
+        ])->toArray();
 
         return Inertia::render('Permanences/Edit', [
             'permanence' => $permanence,
@@ -145,9 +133,13 @@ class PermanenceController extends Controller
             'RSemaine' => 'required|string|max:255',
         ]);
 
-        $permanence->update($request->only([
-            'DSemaine', 'FSemaine', 'PSemaine', 'RSemaine'
-        ]));
+        $permanence->update($data);
+
+        // ✅ reload relations
+        $permanence->load('destinations.numeros.organisme');
+
+        // 🚀 broadcast UPDATE
+        broadcast(new PermanenceUpdated($permanence, 'update'))->toOthers();
 
         return redirect()->route('permanences.show', $permanence)
             ->with('success', 'Permanence updated successfully.');
@@ -155,8 +147,13 @@ class PermanenceController extends Controller
 
     public function destroy(Permanence $permanence)
     {
+        $id = $permanence->id;
+
         $permanence->destinations()->detach();
         $permanence->delete();
+
+        // 🚀 broadcast DELETE
+        broadcast(new PermanenceUpdated(['id' => $id], 'delete'))->toOthers();
 
         return redirect()->route('permanences.index')
             ->with('success', 'Permanence deleted successfully.');
@@ -164,49 +161,40 @@ class PermanenceController extends Controller
 
     public function deletePrecedant()
     {
-        $today = now();
-        
-        // Get all permanences that are PRECEDANT (past permanences)
-        $precedantPermanences = Permanence::where('FSemaine', '<', $today->format('Y-m-d'))->get();
-        
-        $deletedCount = 0;
-        
-        foreach ($precedantPermanences as $permanence) {
-            // Detach destinations first
-            $permanence->destinations()->detach();
-            // Delete the permanence
-            $permanence->delete();
-            $deletedCount++;
+        $today = now()->format('Y-m-d');
+
+        $permanences = Permanence::where('FSemaine', '<', $today)->get();
+
+        $count = 0;
+
+        foreach ($permanences as $p) {
+            $id = $p->id;
+
+            $p->destinations()->detach();
+            $p->delete();
+
+            broadcast(new PermanenceUpdated(['id' => $id], 'delete'))->toOthers();
+
+            $count++;
         }
-        
+
         return redirect()->route('permanences.index')
-            ->with('success', "{$deletedCount} permanence(s) PRECEDANT supprimée(s) avec succès.");
+            ->with('success', "$count permanence(s) supprimée(s).");
     }
 
     public function thisWeek()
     {
         $today = now()->format('Y-m-d');
-        \Log::info('Today is: ' . $today);
 
-        // Find permanence for today
-        $thisWeekPermanence = Permanence::where('DSemaine', '<=', $today)
+        $permanence = Permanence::where('DSemaine', '<=', $today)
             ->where('FSemaine', '>=', $today)
             ->with('destinations.numeros.organisme')
             ->first();
 
-        \Log::info('Found permanence:', $thisWeekPermanence ? $thisWeekPermanence->toArray() : []);
-
-        // Get all destinations with their numeros for the helper functions (like in index)
-        $destinations = \App\Models\Destination::with('numeros.technologie')->get();
+        $destinations = Destination::with('numeros.technologie')->get();
 
         return Inertia::render('Permanences/ThisWeek', [
-            'permanence' => $thisWeekPermanence,
-            'currentWeek' => [
-                'start' => $today,
-                'end' => $today,
-                'startFormatted' => now()->format('d/m/Y'),
-                'endFormatted' => now()->format('d/m/Y')
-            ],
+            'permanence' => $permanence,
             'destinations' => $destinations
         ]);
     }
@@ -214,29 +202,26 @@ class PermanenceController extends Controller
     public function apiThisWeek()
     {
         $today = now()->format('Y-m-d');
-        \Log::info('Today is: ' . $today);
 
         $permanence = Permanence::where('DSemaine', '<=', $today)
             ->where('FSemaine', '>=', $today)
             ->with('destinations.numeros.organisme')
             ->first();
 
-        \Log::info('Found permanence:', $permanence ? $permanence->toArray() : []);
-
         return response()->json($permanence);
     }
 
     public function apiProchainPermanences()
     {
-        $today = now();
-        
-        $prochainPermanences = Permanence::where('DSemaine', '>', $today->format('Y-m-d'))
+        $today = now()->format('Y-m-d');
+
+        $permanences = Permanence::where('DSemaine', '>', $today)
             ->with('destinations.numeros.organisme')
             ->get();
 
         return response()->json([
-            'count' => $prochainPermanences->count(),
-            'permanences' => $prochainPermanences
+            'count' => $permanences->count(),
+            'permanences' => $permanences
         ]);
     }
 }
