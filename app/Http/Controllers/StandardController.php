@@ -1,21 +1,31 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Permanence;
-use App\Models\Destination;
-use App\Models\Groupe;
 use App\Models\Numero;
+use App\Models\Destination;
+use App\Models\Classe;
+use App\Models\Type;
+use App\Models\Reserve;
+use App\Models\Technologie;
+use App\Models\Facture;
+use App\Models\Matricule;
+use App\Models\Organisme;
+use App\Models\Acheminement;
+use App\Models\Service;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use App\Events\NumeroUpdated;
 
 class StandardController extends Controller
 {
     /**
-     * Display all numeros for the standard page.
+     * Shared relations (IMPORTANT: must match other controllers)
      */
-    public function index()
+    private function relations()
     {
-        $numeros = Numero::with([
+        return [
             'organisme',
             'destination.groupes',
             'service',
@@ -29,61 +39,45 @@ class StandardController extends Controller
             'notes',
             'fax',
             'post',
-        ])
-        // ✅ Hide numeros with related type.name = 'PRIVEE1'
-        ->whereHas('type', function ($query) {
-            $query->where('name', '!=', 'PRIVEE1');
-        })
-        ->orderBy('technologie_id')
-        ->orderBy('matricule_id')
-        ->get();
-///permanence of week 
- $today = now()->format('Y-m-d');
-        \Log::info('Today is: ' . $today);
+        ];
+    }
 
-        // Find permanence for today
-        $thisWeekPermanence = Permanence::where('DSemaine', '<=', $today)
+    /**
+     * Display all numeros
+     */
+    public function index()
+    {
+        $numeros = Numero::with($this->relations())
+            ->whereHas('type', function ($q) {
+                $q->where('name', '!=', 'PRIVEE1');
+            })
+            ->orderBy('technologie_id')
+            ->orderBy('matricule_id')
+            ->get();
+
+        $today = now()->toDateString();
+
+        $permanence = Permanence::where('DSemaine', '<=', $today)
             ->where('FSemaine', '>=', $today)
             ->with('destinations.numeros.organisme')
             ->first();
 
-        \Log::info('Found permanence:', $thisWeekPermanence ? $thisWeekPermanence->toArray() : []);
-
-        // Get all destinations with their numeros for the helper functions (like in index)
         $destinations = Destination::with('numeros.technologie')->get();
 
         return Inertia::render('Standard/Index', [
             'numeros' => $numeros,
-            'permanence' => $thisWeekPermanence,
-            
-            'destinations' => $destinations
-
+            'permanence' => $permanence,
+            'destinations' => $destinations,
         ]);
     }
 
     /**
-     * Show a single numero by NDappel (if you need it).
+     * Show one numero
      */
     public function show(Request $request)
     {
-        $ndappel = $request->query('ndappel');
-
-        $numero = Numero::where('NDappel', $ndappel)
-            ->with([
-                'organisme',
-                'destination.groupes',
-                'service',
-                'classe',
-                'type',
-                'reserve',
-                'technologie',
-                'facture',
-                'matricule',
-                'acheminements',
-                'notes',
-                'fax',
-                'post',
-            ])
+        $numero = Numero::with($this->relations())
+            ->where('NDappel', $request->query('ndappel'))
             ->firstOrFail();
 
         return Inertia::render('Standard/Show', [
@@ -92,37 +86,37 @@ class StandardController extends Controller
     }
 
     /**
-     * Update NDappel (only if technologie is MOBILE).
+     * Update NDappel + broadcast
      */
     public function updateNDappel(Request $request)
-    {
-        $validated = $request->validate([
-            'id' => 'required|exists:numeros,id',
-            'NDappel' => 'required|string|max:255',
-        ]);
+{
+    $validated = $request->validate([
+        'id' => 'required|exists:numeros,id',
+        'NDappel' => 'required|string|max:255',
+    ]);
 
-        $numero = Numero::find($validated['id']);
+    $numero = Numero::with($this->relations())
+        ->findOrFail($validated['id']);
 
-        // ✅ Update only if technologie is MOBILE
-        if (strtoupper($numero->technologie->name ?? '') === 'MOBILE') {
-            $numero->NDappel = $validated['NDappel'];
-            $numero->save();
-            $numero->load([
-            'organisme',
-            'destination',
-            'classe',
-            'type',
-            'service',
-            'acheminements'
-        ]);
-
-        // Broadcast ONCE
-        broadcast(new NumeroUpdated($numero))->toOthers();
-        
-        }
-
-        return back();
+    if (strtoupper($numero->technologie->name ?? '') !== 'MOBILE') {
+        return back()->with('error', 'Update not allowed for this technologie');
     }
-    
 
+    $numero->NDappel = $validated['NDappel'];
+    $numero->save();
+
+    // ❌ REMOVE refresh/load (not needed)
+    // $numero->refresh();
+    // $numero->load($this->relations());
+
+    \Log::info('Standard update NDappel', [
+        'id' => $numero->id,
+        'NDappel' => $numero->NDappel,
+    ]);
+
+    broadcast(new NumeroUpdated($numero))->toOthers();
+    
+\Log::info('BEFORE BROADCAST', ['id' => $numero->id]);
+    return back()->with('success', 'NDappel updated successfully');
+}
 }

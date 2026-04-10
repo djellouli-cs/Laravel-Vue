@@ -7,10 +7,10 @@ use App\Models\Numero;
 use App\Models\Technologie;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Events\NumeroUpdated;
 
 class AcheminementController extends Controller
 {
-    // 🔹 Shared method for SWD / DIVERS pages /ADM
     private function renderView(string $view)
     {
         $acheminements = Acheminement::with([
@@ -29,29 +29,26 @@ class AcheminementController extends Controller
         ]);
     }
 
-    // 🟢 SWD View
     public function swd()
     {
         return $this->renderView('Autocom/SWD');
     }
 
-    // 🟡 DIVERS View
     public function divers()
     {
         return $this->renderView('Autocom/DIVERS');
     }
-// 🟡 ADM View
+
     public function adm()
     {
         return $this->renderView('Autocom/ADM');
     }
-//🟡 PTT-2-112 View
+
     public function ptt2er112()
     {
         return $this->renderView('Autocom/PTT-2-112');
     }
-    
-    // 🟢 Manager page
+
     public function manageAcheminement()
     {
         return Inertia::render('Numero/MultiCrud/ManagerAcheminement', [
@@ -60,7 +57,9 @@ class AcheminementController extends Controller
         ]);
     }
 
-    // 🟢 Store a new acheminement
+    /* =========================
+       CREATE
+    ========================= */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -69,13 +68,26 @@ class AcheminementController extends Controller
             'description' => 'nullable|string|max:255',
         ]);
 
-        Acheminement::create($data);
+        $acheminement = Acheminement::create($data);
+
+        // 🔥 reload numero with relations
+        $numero = Numero::with([
+            'acheminements',
+            'organisme',
+            'destination',
+            'fax',
+            'technologie'
+        ])->find($acheminement->numero_id);
+
+        broadcast(new NumeroUpdated($numero))->toOthers();
 
         return redirect()->route('acheminement.manage')
             ->with('success', 'Acheminement created.');
     }
 
-    // 🟢 Update an existing acheminement
+    /* =========================
+       UPDATE
+    ========================= */
     public function update(Request $request, $id)
     {
         $data = $request->validate([
@@ -87,15 +99,40 @@ class AcheminementController extends Controller
         $acheminement = Acheminement::findOrFail($id);
         $acheminement->update($data);
 
+        $numero = Numero::with([
+            'acheminements',
+            'organisme',
+            'destination',
+            'fax',
+            'technologie'
+        ])->find($acheminement->numero_id);
+
+        broadcast(new NumeroUpdated($numero))->toOthers();
+
         return redirect()->route('acheminement.manage')
             ->with('success', 'Acheminement updated.');
     }
 
-    // 🟢 Delete an acheminement
+    /* =========================
+       DELETE
+    ========================= */
     public function destroy($id)
     {
         $acheminement = Acheminement::findOrFail($id);
+
+        $numeroId = $acheminement->numero_id;
+
         $acheminement->delete();
+
+        $numero = Numero::with([
+            'acheminements',
+            'organisme',
+            'destination',
+            'fax',
+            'technologie'
+        ])->find($numeroId);
+
+        broadcast(new NumeroUpdated($numero))->toOthers();
 
         return redirect()->route('acheminement.manage')
             ->with('success', 'Acheminement deleted.');

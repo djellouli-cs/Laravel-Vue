@@ -13,6 +13,7 @@ use App\Models\Matricule;
 use App\Models\Organisme;
 use App\Models\Acheminement;
 use App\Models\Service;
+use App\Models\Note;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,7 +36,8 @@ class NumeroController extends Controller
         'service',
         'acheminements',
         'fax',
-        'user'
+        'user',
+        'notes'
     ])->get();
 
     return Inertia::render('Autocom/PTT-1-112', [
@@ -112,12 +114,18 @@ class NumeroController extends Controller
             $numero=Numero::create($formData);
 // Load relations (VERY IMPORTANT)
         $numero->load([
-            'organisme',
             'destination',
-            'classe',
-            'type',
-            'service',
-            'acheminements'
+        'classe',
+        'type',
+        'reserve',
+        'technologie',
+        'facture',
+        'matricule',
+        'organisme',
+        'service',
+        'acheminements',
+        'fax',
+        'user'
         ]);
 
         // Broadcast ONCE
@@ -152,14 +160,20 @@ class NumeroController extends Controller
 
         // Load relations (VERY IMPORTANT)
         $numero->load([
-            'organisme',
-            'destination',
-            'classe',
-            'type',
-            'service',
-            'acheminements'
+           'destination',
+        'classe',
+        'type',
+        'reserve',
+        'technologie',
+        'facture',
+        'matricule',
+        'organisme',
+        'service',
+        'acheminements',
+        'fax',
+        'user',
+        'notes'
         ]);
-
         // Broadcast ONCE
         broadcast(new NumeroUpdated($numero))->toOthers();
 

@@ -181,7 +181,7 @@
               <ul v-if="searchedNumero.notes?.length" class="list-disc ml-7 text-base text-blue-900">
                 <li v-for="note in searchedNumero.notes" :key="note.id ?? note.created_at">
                   {{ note.content }}
-                  <span class="text-gray-400 text-xs"> ({{ formatDate(note.created_at, true) }}) </span>
+                  <span class="text-gray-400 text-xs"> ({{ formatDate(note.updated_at, true) }}) </span>
                 </li>
               </ul>
               <p v-else class="text-gray-400 text-base">Aucune note disponible pour ce numéro.</p>
@@ -215,8 +215,43 @@ const activeIndex = ref(-1)
 const showSuggestions = ref(false)
 let debounceTimer = null
 
-const normalize = (v) => String(v ?? '').trim().toLowerCase()
+/* 👉 Local reactive copy for real-time updates */
+const localNumeros = ref([...props.numeros])
 
+const normalize = (v) => String(v ?? '').trim().toLowerCase()
+const localNotes = ref([])
+
+onMounted(() => {
+
+  window.Echo.channel('notes')
+    .listen('.NoteUpdated', (e) => {
+
+      const note = e.note
+
+      const index = localNotes.value.findIndex(
+        n => n.id === note.id
+      )
+
+      // DELETE
+      if (e.deleted) {
+        if (index !== -1) {
+          localNotes.value.splice(index, 1)
+        }
+        return
+      }
+
+      // UPDATE or CREATE
+      if (index !== -1) {
+        localNotes.value.splice(index, 1, note)
+      } else {
+        localNotes.value.unshift(note)
+      }
+    })
+})
+
+onBeforeUnmount(() => {
+  window.Echo.leaveChannel('notes')
+})
 // Debounce input
 watch(search, (val) => {
   clearTimeout(debounceTimer)
@@ -231,14 +266,14 @@ watch(search, (val) => {
 const searchedNumero = computed(() => {
   const q = normalize(debouncedSearch.value)
   if (!q) return null
-  return props.numeros.find((n) => normalize(n.NDappel) === q) || null
+  return localNumeros.value.find((n) => normalize(n.NDappel) === q) || null
 })
 
 // Suggestions
 const filteredSuggestions = computed(() => {
   const q = normalize(search.value)
   if (!q) return []
-  return props.numeros.filter((n) => normalize(n.NDappel).includes(q))
+  return localNumeros.value.filter((n) => normalize(n.NDappel).includes(q))
 })
 
 const showSuggestionList = computed(() => {
@@ -291,20 +326,58 @@ function onClickOutside(e) {
     activeIndex.value = -1
   }
 }
-
+/* =========================
+   🚀 REAL TIME ECHO
+========================= */
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
-  // Pré-remplir depuis ?ndappel=xxxx
+
+  // optional URL prefill
   const urlParams = new URLSearchParams(window.location.search)
   const ndappel = urlParams.get('ndappel')
   if (ndappel) {
     search.value = ndappel
     debouncedSearch.value = ndappel
   }
+
+  // REALTIME LISTENER
+  window.Echo.channel('numeros')
+    .listen('.NumeroUpdated', (e) => {
+
+      const updated = e.numero
+      //console.log('REALTIME EVENT:', e)
+
+      const index = localNumeros.value.findIndex(
+        (n) => n.id === updated.id
+      )
+
+      // DELETE
+      if (e.deleted) {
+        if (index !== -1) {
+          localNumeros.value.splice(index, 1)
+        }
+        return
+      }
+
+      // UPDATE
+      if (index !== -1) {
+        localNumeros.value[index] = {
+          ...localNumeros.value[index],
+          ...updated
+        }
+      } 
+      // CREATE
+      else {
+        localNumeros.value.unshift(updated)
+      }
+    })
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', onClickOutside)
+
+  // optional cleanup (good practice)
+  window.Echo.leaveChannel('numeros')
 })
 
 // Format date
@@ -326,7 +399,6 @@ function editNumero(numero) {
   }
 }
 </script>
-
 <style scoped>
 .bg-blue-100 { background-color: #ebf8ff; }
 </style>
